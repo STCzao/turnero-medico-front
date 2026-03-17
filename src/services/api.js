@@ -17,7 +17,9 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // Solo redirigir si había una sesión activa (token guardado).
+    // Un 401 en el endpoint de login significa credenciales incorrectas, no sesión expirada.
+    if (error.response?.status === 401 && localStorage.getItem('token')) {
       localStorage.removeItem('token')
       window.location.href = '/login'
     }

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../hooks/useAuth'
+import useAuthStore from '../../../store/authSlice'
 import { getHomeByRol } from '../../../router/redirect'
 import { ROUTES } from '../../../router/routes'
 import { validate, rules } from '../../../utils/validators'
@@ -47,6 +48,7 @@ function FInput({ id, label, type = 'text', placeholder, value, onChange, error 
 export default function LoginForm() {
   const { login, loading, error } = useAuth()
   const navigate = useNavigate()
+  const getUser = () => useAuthStore.getState().user
 
   const [form, setForm] = useState({ email: '', password: '' })
   const [fieldErrors, setFieldErrors] = useState({})
@@ -61,8 +63,9 @@ export default function LoginForm() {
     const errors = validate(LOGIN_SCHEMA, form)
     if (Object.keys(errors).length) { setFieldErrors(errors); return }
     try {
-      const data = await login(form)
-      navigate(getHomeByRol(data?.rol), { replace: true })
+      await login(form)
+      // El rol se obtiene del store (decodificado del JWT), no del body de la respuesta
+      navigate(getHomeByRol(getUser()?.rol), { replace: true })
     } catch { /* manejo en hook */ }
   }
 
