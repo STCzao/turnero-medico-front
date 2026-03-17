@@ -1,4 +1,4 @@
-import api from '../../services/api'
+import api from '../../../services/api'
 
 // Obras sociales — GET público (auth), CUD solo Admin/Secretaria
 export const obrasSocialesService = {

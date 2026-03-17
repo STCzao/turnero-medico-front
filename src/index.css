@@ -1,1 +1,15 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap");
 @import "tailwindcss";
+
+@theme inline {
+  /* Tipografía */
+  --font-sans: "Inter", sans-serif;
+
+  /* Paleta health & wellness */
+  --color-mint:    #D6F3F4;  /* fondo claro */
+  --color-sky:     #74B3CE;  /* azul acero */
+  --color-teal:    #508991;  /* teal medio */
+  --color-deep:    #004346;  /* teal oscuro — primary */
+  --color-navy:    #172A3A;  /* azul marino oscuro — texto */
+  --color-white:   #FFFFFF;
+}
