@@ -7,13 +7,23 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+
+# Build output
 dist
 dist-ssr
-*.local
 
+# Environment variables — nunca subir al repositorio
 .env
-node_modules
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
+*.local
 
 # Editor directories and files
 .vscode/*
@@ -25,3 +35,9 @@ node_modules
 *.njsproj
 *.sln
 *.sw?
+
+# Cache
+.eslintcache
+.cache
+.parcel-cache
+.turbo
