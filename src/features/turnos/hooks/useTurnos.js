@@ -102,3 +102,27 @@ export function useTurnoActions(onSuccess) {
 
   return { crear, confirmar, rechazar, cancelar, actualizar, loading, error }
 }
+
+// Hook para Doctor — agenda del día por fecha
+export function useAgendaDoctor(fecha) {
+  const [turnos, setTurnos] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  const fetch = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const { data } = await turnosService.getMyAgenda(fecha)
+      setTurnos(data)
+    } catch (err) {
+      setError(err.response?.data?.mensaje || 'Error al cargar la agenda')
+    } finally {
+      setLoading(false)
+    }
+  }, [fecha])
+
+  useEffect(() => { fetch() }, [fetch])
+
+  return { turnos, loading, error, refetch: fetch }
+}

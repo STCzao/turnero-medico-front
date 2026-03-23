@@ -6,6 +6,8 @@ import { ROLES } from '../constants/roles'
 import LoginPage from '../features/auth/pages/LoginPage'
 import RegisterPage from '../features/auth/pages/RegisterPage'
 import MisTurnosPage from '../features/turnos/pages/MisTurnosPage'
+import SolicitarTurnoPage from '../features/turnos/pages/SolicitarTurnoPage'
+import MiAgendaPage from '../features/turnos/pages/MiAgendaPage'
 import PageWrapper from '../components/layout/PageWrapper'
 
 // TODO: reemplazar placeholders por páginas reales al avanzar en cada fase
@@ -32,14 +34,14 @@ export default function AppRouter() {
         {/* Paciente */}
         <Route element={<PrivateRoute roles={[ROLES.PACIENTE]} />}>
           <Route path={ROUTES.MIS_TURNOS} element={<MisTurnosPage />} />
-          <Route path={ROUTES.SOLICITAR_TURNO} element={<Placeholder titulo="Solicitar Turno" />} />
+          <Route path={ROUTES.SOLICITAR_TURNO} element={<SolicitarTurnoPage />} />
           <Route path={ROUTES.PERFIL} element={<Placeholder titulo="Perfil" />} />
           <Route path={ROUTES.HISTORIAL} element={<Placeholder titulo="Historial" />} />
         </Route>
 
         {/* Doctor */}
         <Route element={<PrivateRoute roles={[ROLES.DOCTOR]} />}>
-          <Route path={ROUTES.MI_AGENDA} element={<Placeholder titulo="Mi Agenda" />} />
+          <Route path={ROUTES.MI_AGENDA} element={<MiAgendaPage />} />
         </Route>
 
         {/* Secretaria + Admin — gestión */}
