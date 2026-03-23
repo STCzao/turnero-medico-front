@@ -16,16 +16,11 @@ import GestionPendientesPage from '../features/turnos/pages/GestionPendientesPag
 import GestionTurnosPage from '../features/turnos/pages/GestionTurnosPage'
 import GestionPacientesPage from '../features/pacientes/pages/GestionPacientesPage'
 import GestionMedicosPage from '../features/medicos/pages/GestionMedicosPage'
-import PageWrapper from '../components/layout/PageWrapper'
+import GestionEspecialidadesPage from '../features/especialidades/pages/GestionEspecialidadesPage'
+import GestionObrasSocialesPage from '../features/obrasSociales/pages/GestionObrasSocialesPage'
+import AdminDashboardPage from '../features/admin/pages/AdminDashboardPage'
+import AdminHorariosPage from '../features/admin/pages/AdminHorariosPage'
 
-// TODO: reemplazar placeholders por páginas reales al avanzar en cada fase
-const Placeholder = ({ titulo }) => (
-  <PageWrapper>
-    <div className="flex items-center justify-center h-64 text-navy/40 text-xl">
-      {titulo} — próximamente
-    </div>
-  </PageWrapper>
-)
 
 export default function AppRouter() {
   return (
@@ -60,11 +55,14 @@ export default function AppRouter() {
           <Route path={ROUTES.GESTION_TURNOS} element={<GestionTurnosPage />} />
           <Route path={ROUTES.GESTION_MEDICOS} element={<GestionMedicosPage />} />
           <Route path={ROUTES.GESTION_PACIENTES} element={<GestionPacientesPage />} />
+          <Route path={ROUTES.GESTION_OBRAS_SOCIALES} element={<GestionObrasSocialesPage />} />
+          <Route path={ROUTES.GESTION_ESPECIALIDADES} element={<GestionEspecialidadesPage />} />
         </Route>
 
         {/* Solo Admin */}
         <Route element={<PrivateRoute roles={[ROLES.ADMIN]} />}>
-          <Route path={ROUTES.ADMIN_DASHBOARD} element={<Placeholder titulo="Dashboard Admin" />} />
+          <Route path={ROUTES.ADMIN_DASHBOARD} element={<AdminDashboardPage />} />
+          <Route path={ROUTES.ADMIN_HORARIOS} element={<AdminHorariosPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

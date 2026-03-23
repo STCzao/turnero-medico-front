@@ -20,6 +20,7 @@ export const ROUTES = {
   GESTION_MEDICOS: '/gestion/medicos',
   GESTION_PACIENTES: '/gestion/pacientes',
   GESTION_OBRAS_SOCIALES: '/gestion/obras-sociales',
+  GESTION_ESPECIALIDADES: '/gestion/especialidades',
 
   // Admin
   ADMIN_DASHBOARD: '/admin',
