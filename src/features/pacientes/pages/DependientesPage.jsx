@@ -98,6 +98,7 @@ export default function DependientesPage() {
 
   return (
     <PageWrapper>
+      <div className="w-full max-w-lg mx-auto">
       <div className="mb-6 flex items-start justify-between">
         <div>
           <h1 className="text-deep font-black text-2xl md:text-3xl tracking-tight">Mis dependientes</h1>
@@ -118,7 +119,7 @@ export default function DependientesPage() {
         )}
       </div>
 
-      <div className="w-full max-w-lg space-y-6">
+      <div className="space-y-6">
         {/* Formulario */}
         <AnimatePresence>
           {showForm && (
@@ -200,6 +201,7 @@ export default function DependientesPage() {
             <DependienteCard key={dep.id} dep={dep} />
           ))}
         </AnimatePresence>
+      </div>
       </div>
     </PageWrapper>
   )

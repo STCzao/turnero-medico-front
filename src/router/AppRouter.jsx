@@ -12,6 +12,7 @@ import PerfilPacientePage from '../features/pacientes/pages/PerfilPacientePage'
 import DependientesPage from '../features/pacientes/pages/DependientesPage'
 import PacienteHomePage from '../features/pacientes/pages/PacienteHomePage'
 import HistorialPage from '../features/turnos/pages/HistorialPage'
+import GestionPendientesPage from '../features/turnos/pages/GestionPendientesPage'
 import PageWrapper from '../components/layout/PageWrapper'
 
 // TODO: reemplazar placeholders por páginas reales al avanzar en cada fase
@@ -52,7 +53,7 @@ export default function AppRouter() {
 
         {/* Secretaria + Admin — gestión */}
         <Route element={<PrivateRoute roles={[ROLES.SECRETARIA, ROLES.ADMIN]} />}>
-          <Route path={ROUTES.TURNOS_PENDIENTES} element={<Placeholder titulo="Turnos Pendientes" />} />
+          <Route path={ROUTES.TURNOS_PENDIENTES} element={<GestionPendientesPage />} />
           <Route path={ROUTES.GESTION_TURNOS} element={<Placeholder titulo="Gestión de Turnos" />} />
           <Route path={ROUTES.GESTION_MEDICOS} element={<Placeholder titulo="Gestión de Médicos" />} />
           <Route path={ROUTES.GESTION_PACIENTES} element={<Placeholder titulo="Gestión de Pacientes" />} />

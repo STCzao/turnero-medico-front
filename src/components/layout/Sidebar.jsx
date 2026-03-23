@@ -79,57 +79,57 @@ export default function Sidebar() {
 
   return (
     <aside className="hidden md:flex flex-col fixed top-16 left-0 h-[calc(100vh-4rem)] w-56 bg-deep pt-6 pb-0 overflow-y-auto z-40">
-      {/* Secciones de navegación */}
-      <div className="flex-1">
-        {sections.map(({ section, links }) => (
-          <div key={section} className="mb-6 px-4">
-            <p className="text-[10px] font-bold text-mint/30 uppercase tracking-widest mb-2 px-2">{section}</p>
-            {links.map(({ label, to, icon }) => (
-              <NavLink
-                key={to}
-                to={to}
-                end={to === ROUTES.MIS_TURNOS}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors mb-0.5 ${
-                    isActive
-                      ? 'bg-white/15 text-white'
-                      : 'text-mint/70 hover:bg-white/8 hover:text-mint'
-                  }`
-                }
-              >
-                <Icon d={icon} />
-                {label}
-              </NavLink>
-            ))}
-          </div>
-        ))}
-      </div>
-
-      {/* Usuario — perfil */}
-      <div className="px-4 pt-3 pb-4 border-t border-white/10">
-        <div className="flex items-center gap-2.5 px-3 py-2 mb-1">
-          <div className="w-8 h-8 rounded-full bg-teal/80 flex items-center justify-center text-white text-xs font-bold shrink-0 select-none">
-            {initials}
-          </div>
-          <div className="min-w-0">
-            <p className="text-white text-xs font-semibold truncate leading-tight">{user?.nombre}</p>
-            <p className="text-mint/35 text-[10px] truncate leading-tight">{user?.email}</p>
-          </div>
+        {/* Secciones de navegación */}
+        <div className="flex-1">
+          {sections.map(({ section, links }) => (
+            <div key={section} className="mb-6 px-4">
+              <p className="text-[10px] font-bold text-mint/30 uppercase tracking-widest mb-2 px-2">{section}</p>
+              {links.map(({ label, to, icon }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  end={to === ROUTES.MIS_TURNOS}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors mb-0.5 ${
+                      isActive
+                        ? 'bg-white/15 text-white'
+                        : 'text-mint/70 hover:bg-white/8 hover:text-mint'
+                    }`
+                  }
+                >
+                  <Icon d={icon} />
+                  {label}
+                </NavLink>
+              ))}
+            </div>
+          ))}
         </div>
-        <NavLink
-          to={ROUTES.PERFIL}
-          className={({ isActive }) =>
-            `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors mb-0.5 ${
-              isActive ? 'bg-white/15 text-white' : 'text-mint/70 hover:bg-white/8 hover:text-mint'
-            }`
-          }
-        >
-          <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-          </svg>
-          Mi Perfil
-        </NavLink>
-      </div>
-    </aside>
+
+        {/* Usuario — perfil */}
+        <div className="px-4 pt-3 pb-4 border-t border-white/10">
+          <div className="flex items-center gap-2.5 px-3 py-2 mb-1">
+            <div className="w-8 h-8 rounded-full bg-teal/80 flex items-center justify-center text-white text-xs font-bold shrink-0 select-none">
+              {initials}
+            </div>
+            <div className="min-w-0">
+              <p className="text-white text-xs font-semibold truncate leading-tight">{user?.nombre}</p>
+              <p className="text-mint/35 text-[10px] truncate leading-tight">{user?.email}</p>
+            </div>
+          </div>
+          <NavLink
+            to={ROUTES.PERFIL}
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors mb-0.5 ${
+                isActive ? 'bg-white/15 text-white' : 'text-mint/70 hover:bg-white/8 hover:text-mint'
+              }`
+            }
+          >
+            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            Mi Perfil
+          </NavLink>
+        </div>
+      </aside>
   )
 }

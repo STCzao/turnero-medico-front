@@ -59,7 +59,17 @@ export default function Modal({
 }
 
 // Modal de confirmación genérico
-export function ConfirmModal({ isOpen, onClose, onConfirm, title, message, loading }) {
+export function ConfirmModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  confirmLabel = 'Confirmar',
+  cancelLabel = 'Cancelar',
+  variant = 'danger',
+  loading = false,
+}) {
   return (
     <Modal
       isOpen={isOpen}
@@ -69,15 +79,15 @@ export function ConfirmModal({ isOpen, onClose, onConfirm, title, message, loadi
       footer={
         <>
           <Button variant="secondary" onClick={onClose} disabled={loading}>
-            Cancelar
+            {cancelLabel}
           </Button>
-          <Button variant="danger" onClick={onConfirm} loading={loading}>
-            Confirmar
+          <Button variant={variant} onClick={onConfirm} loading={loading}>
+            {confirmLabel}
           </Button>
         </>
       }
     >
-      <p>{message}</p>
+      <p className="text-deep/60 leading-relaxed">{message}</p>
     </Modal>
   )
 }

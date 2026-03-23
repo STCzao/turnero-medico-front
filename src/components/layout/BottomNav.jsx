@@ -1,7 +1,9 @@
-import { NavLink } from 'react-router-dom'
+import { useState } from 'react'
+import { NavLink, useNavigate } from 'react-router-dom'
 import useAuthStore from '../../store/authSlice'
 import { ROUTES } from '../../router/routes'
 import { ROLES } from '../../constants/roles'
+import { ConfirmModal } from '../ui/Modal'
 
 const TABS = {
   [ROLES.PACIENTE]: [
@@ -91,46 +93,73 @@ const TABS = {
 }
 
 export default function BottomNav() {
-  const rol = useAuthStore(s => s.user?.rol)
-  const tabs = TABS[rol] ?? []
+  const { user, logout } = useAuthStore()
+  const navigate = useNavigate()
+  const [logoutOpen, setLogoutOpen] = useState(false)
+  const tabs = TABS[user?.rol] ?? []
+
+  const handleLogout = () => {
+    logout()
+    navigate(ROUTES.LOGIN)
+  }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-deep border-t border-white/8 flex items-stretch safe-area-bottom">
-      {tabs.map(({ label, to, icon, highlight }) => (
-        <NavLink
-          key={to}
-          to={to}
-          end={to === ROUTES.MIS_TURNOS}
-          className={({ isActive }) =>
-            `flex-1 flex flex-col items-center justify-center gap-1 py-2 text-[10px] font-semibold tracking-wide transition-colors ${
-              highlight
-                ? isActive
-                  ? 'text-mint'
-                  : 'text-sky'
-                : isActive
-                  ? 'text-white'
-                  : 'text-mint/40'
-            }`
-          }
-        >
-          {({ isActive }) => (
-            <>
-              {highlight ? (
-                <span className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg -translate-y-4 ring-4 ring-deep transition-all ${isActive ? 'bg-teal scale-105' : 'bg-sky'}`}>
-                  <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+    <>
+      <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-deep border-t border-white/8 flex items-stretch safe-area-bottom">
+        {tabs.map(({ label, to, icon, highlight }) => (
+          <NavLink
+            key={to}
+            to={to}
+            end={to === ROUTES.MIS_TURNOS}
+            className={({ isActive }) =>
+              `flex-1 flex flex-col items-center justify-center gap-1 py-2 text-[10px] font-semibold tracking-wide transition-colors ${
+                highlight
+                  ? isActive ? 'text-mint' : 'text-sky'
+                  : isActive ? 'text-white' : 'text-mint/40'
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                {highlight ? (
+                  <span className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg -translate-y-4 ring-4 ring-deep transition-all ${isActive ? 'bg-teal scale-105' : 'bg-sky'}`}>
+                    <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      {icon}
+                    </svg>
+                  </span>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={isActive ? 2.25 : 1.75}>
                     {icon}
                   </svg>
-                </span>
-              ) : (
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={isActive ? 2.25 : 1.75}>
-                  {icon}
-                </svg>
-              )}
-              {!highlight && <span>{label}</span>}
-            </>
-          )}
-        </NavLink>
-      ))}
-    </nav>
+                )}
+                {!highlight && <span>{label}</span>}
+              </>
+            )}
+          </NavLink>
+        ))}
+
+        {/* Cerrar sesión — siempre al final */}
+        <button
+          onClick={() => setLogoutOpen(true)}
+          className="flex-1 flex flex-col items-center justify-center gap-1 py-2 text-[10px] font-semibold tracking-wide text-mint/40 hover:text-red-400 transition-colors"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          <span>Salir</span>
+        </button>
+      </nav>
+
+      <ConfirmModal
+        isOpen={logoutOpen}
+        onClose={() => setLogoutOpen(false)}
+        onConfirm={handleLogout}
+        title="Cerrar sesión"
+        message="¿Querés cerrar tu sesión? Deberás iniciar sesión nuevamente para acceder."
+        confirmLabel="Cerrar sesión"
+        cancelLabel="Cancelar"
+        variant="danger"
+      />
+    </>
   )
 }

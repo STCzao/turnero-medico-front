@@ -6,6 +6,7 @@ import { useMyProfile } from '../hooks/usePacientes'
 import { ROUTES } from '../../../router/routes'
 import useAuthStore from '../../../store/authSlice'
 import { validate, rules } from '../../../utils/validators'
+import { ConfirmModal } from '../../../components/ui/Modal'
 
 const SCHEMA_EDIT = {
   nombre:   [rules.required('Ingresá el nombre')],
@@ -33,6 +34,7 @@ export default function PerfilPacientePage() {
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState(null)
 
+  const [logoutOpen, setLogoutOpen] = useState(false)
   const handleLogout = () => { logout(); navigate(ROUTES.LOGIN) }
 
   const startEdit = () => {
@@ -183,19 +185,29 @@ export default function PerfilPacientePage() {
 
           {/* Cerrar sesión */}
           <button
-            onClick={handleLogout}
+            onClick={() => setLogoutOpen(true)}
             className="w-full flex items-center justify-between bg-white rounded-2xl p-4 shadow-sm border border-deep/5 hover:border-red-200 transition-colors group active:scale-[0.99] text-left"
           >
-              <div>
-                <p className="text-red-500 font-bold text-sm">Cerrar sesión</p>
-                <p className="text-deep/35 text-xs mt-0.5">Salir de tu cuenta</p>
-              </div>
-              <svg className="w-5 h-5 text-red-300 group-hover:text-red-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-            </button>
+            <div>
+              <p className="text-red-500 font-bold text-sm">Cerrar sesión</p>
+              <p className="text-deep/35 text-xs mt-0.5">Salir de tu cuenta</p>
+            </div>
+            <svg className="w-5 h-5 text-red-300 group-hover:text-red-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </button>
         </motion.div>
       )}
+
+      <ConfirmModal
+        isOpen={logoutOpen}
+        onClose={() => setLogoutOpen(false)}
+        onConfirm={handleLogout}
+        title="Cerrar sesión"
+        message="¿Querés cerrar tu sesión? Deberás iniciar sesión nuevamente para acceder."
+        confirmLabel="Cerrar sesión"
+        variant="danger"
+      />
     </PageWrapper>
   )
 }
