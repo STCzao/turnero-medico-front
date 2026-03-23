@@ -1,6 +1,29 @@
 import { useState, useEffect, useCallback } from 'react'
 import { pacientesService } from '../services/pacientesService'
 
+export function usePacientesPaginados({ page = 1, pageSize = 20 } = {}) {
+  const [resultado, setResultado] = useState({ items: [], totalCount: 0 })
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  const fetch = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const { data } = await pacientesService.getAll({ page, pageSize })
+      setResultado(data)
+    } catch (err) {
+      setError(err.response?.data?.mensaje || 'Error al cargar pacientes')
+    } finally {
+      setLoading(false)
+    }
+  }, [page, pageSize])
+
+  useEffect(() => { fetch() }, [fetch])
+
+  return { ...resultado, loading, error, refetch: fetch }
+}
+
 export function useMyProfile() {
   const [perfil, setPerfil] = useState(null)
   const [loading, setLoading] = useState(true)
