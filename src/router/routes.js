@@ -4,6 +4,7 @@ export const ROUTES = {
   REGISTER: '/register',
 
   // Paciente
+  HOME: '/inicio',
   MIS_TURNOS: '/mis-turnos',
   SOLICITAR_TURNO: '/mis-turnos/solicitar',
   PERFIL: '/perfil',

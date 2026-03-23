@@ -21,7 +21,12 @@ export function useMyProfile() {
 
   useEffect(() => { fetch() }, [fetch])
 
-  return { perfil, loading, error, refetch: fetch }
+  const update = useCallback(async (formData) => {
+    await pacientesService.updateMyProfile(formData)
+    await fetch()
+  }, [fetch])
+
+  return { perfil, loading, error, refetch: fetch, update }
 }
 
 export function useDependientes() {
@@ -34,7 +39,7 @@ export function useDependientes() {
     setError(null)
     try {
       const { data } = await pacientesService.getMisDependientes()
-      setDependientes(data)
+      setDependientes(Array.isArray(data) ? data : (data?.items ?? data?.data ?? []))
     } catch (err) {
       setError(err.response?.data?.mensaje || 'Error al cargar dependientes')
     } finally {
