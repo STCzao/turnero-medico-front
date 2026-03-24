@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
-import { obrasSocialesService } from '../services/obrasSocialesService'
+import { secretariasService } from '../services/secretariasService'
 
-export function useObrasSociales({ page = 1, pageSize = 20 } = {}) {
+export function useSecretarias({ page = 1, pageSize = 20 } = {}) {
   const [resultado, setResultado] = useState({ items: [], totalCount: 0 })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -10,10 +10,10 @@ export function useObrasSociales({ page = 1, pageSize = 20 } = {}) {
     setLoading(true)
     setError(null)
     try {
-      const { data } = await obrasSocialesService.getAll({ page, pageSize })
+      const { data } = await secretariasService.getAll({ page, pageSize })
       setResultado({ ...data, totalCount: data.total })
     } catch (err) {
-      setError(err.response?.data?.mensaje || 'Error al cargar obras sociales')
+      setError(err.response?.data?.mensaje || 'Error al cargar secretarias')
     } finally {
       setLoading(false)
     }

@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
 import { turnosService } from '../services/turnosService'
-import useAuthStore from '../../../store/authSlice'
 
 // Hook para el paciente / doctor — ver sus propios turnos
 export function useMisTurnos(estado) {
@@ -37,7 +36,7 @@ export function useTurnosPaginados({ page = 1, pageSize = 20, estado } = {}) {
     setError(null)
     try {
       const { data } = await turnosService.getAll({ page, pageSize, estado })
-      setResultado(data)
+      setResultado({ ...data, totalCount: data.total })
     } catch (err) {
       setError(err.response?.data?.mensaje || 'Error al cargar turnos')
     } finally {
@@ -61,7 +60,7 @@ export function useTurnosPendientes({ page = 1, pageSize = 20 } = {}) {
     setError(null)
     try {
       const { data } = await turnosService.getPendientes({ page, pageSize })
-      setResultado(data)
+      setResultado({ ...data, totalCount: data.total })
     } catch (err) {
       setError(err.response?.data?.mensaje || 'Error al cargar pendientes')
     } finally {
@@ -104,26 +103,24 @@ export function useTurnoActions(onSuccess) {
   return { crear, confirmar, rechazar, cancelar, actualizar, loading, error }
 }
 
-// Hook para Paciente — ver su propio historial clínico
+// Hook para Paciente/Doctor — ver su propio historial clínico (turnos completados)
 export function useHistorial() {
-  const user = useAuthStore((s) => s.user)
   const [turnos, setTurnos] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   const fetch = useCallback(async () => {
-    if (!user?.id) return
     setLoading(true)
     setError(null)
     try {
-      const { data } = await turnosService.getHistorial(user.id)
+      const { data } = await turnosService.getMisTurnos('Completado')
       setTurnos(Array.isArray(data) ? data : (data?.items ?? data?.data ?? []))
     } catch (err) {
       setError(err.response?.data?.mensaje || 'Error al cargar el historial')
     } finally {
       setLoading(false)
     }
-  }, [user?.id])
+  }, [])
 
   useEffect(() => { fetch() }, [fetch])
 

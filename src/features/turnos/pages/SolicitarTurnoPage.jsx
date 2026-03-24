@@ -6,12 +6,9 @@ import { useMedicosByEspecialidad } from '../../medicos/hooks/useMedicos'
 import { useTurnoActions } from '../hooks/useTurnos'
 import { ROUTES } from '../../../router/routes'
 import { useEspecialidades } from '../../especialidades/hooks/useEspecialidades'
-import useAuthStore from '../../../store/authSlice'
 import { validate, rules } from '../../../utils/validators'
-import { useDependientes } from '../../pacientes/hooks/usePacientes'
-
-
-const PASOS = ['Para quién', 'Especialidad', 'Detalles', 'Confirmar']
+import { useMyProfile } from '../../pacientes/hooks/usePacientes'
+const PASOS = ['Especialidad', 'Detalles', 'Confirmar']
 
 function StepIndicator({ paso }) {
   return (
@@ -54,24 +51,21 @@ export default function SolicitarTurnoPage() {
   })
   const [errors, setErrors] = useState({})
 
-  const { especialidades, loading: loadingEsp } = useEspecialidades()
-  const { dependientes, loading: loadingDeps } = useDependientes()
-  const userId = useAuthStore(s => s.user?.id)
+  const { perfil } = useMyProfile()
 
-  const { medicos, loading: loadingMedicos } = useMedicosByEspecialidad(form.especialidadNombre)
+  const { especialidades, loading: loadingEsp } = useEspecialidades()
+
+  const { medicos, loading: loadingMedicos } = useMedicosByEspecialidad(form.especialidadId)
   const { crear, loading, error: submitError } = useTurnoActions(() => {
     navigate(ROUTES.MIS_TURNOS, { state: { turnoSolicitado: true } })
   })
 
   const avanzar = () => {
-    if (paso === 0 && !form.paraMi && !form.dependienteId) {
-      setErrors({ dependienteId: 'Seleccioná un dependiente' }); return
-    }
-    if (paso === 1) {
+    if (paso === 0) {
       const errs = validate({ especialidadId: [rules.required('Seleccioná una especialidad')] }, form)
       if (Object.keys(errs).length) { setErrors(errs); return }
     }
-    if (paso === 2) {
+    if (paso === 1) {
       const errs = validate({ motivo: [rules.required('Describí el motivo de tu consulta'), rules.minLength(5)] }, form)
       if (Object.keys(errs).length) { setErrors(errs); return }
     }
@@ -79,14 +73,18 @@ export default function SolicitarTurnoPage() {
     setPaso(p => p + 1)
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const payload = {
-      pacienteId: form.paraMi ? Number(userId) : Number(form.dependienteId),
+      pacienteId: perfil?.id,
       especialidadId: Number(form.especialidadId),
       motivo: form.motivo.trim(),
       ...(form.doctorId && { doctorId: Number(form.doctorId) }),
     }
-    crear(payload)
+    try {
+      await crear(payload)
+    } catch {
+      // el error ya se muestra vía submitError
+    }
   }
 
   return (
@@ -234,7 +232,7 @@ export default function SolicitarTurnoPage() {
 
         {/* Botones de navegación */}
         <div className="flex gap-3 mt-4">
-          {paso < 3 && (
+          {paso < 2 && (
             <button
               onClick={avanzar}
               className="flex-1 bg-deep text-mint font-bold text-sm py-4 rounded-xl hover:bg-navy transition-colors"
@@ -242,7 +240,7 @@ export default function SolicitarTurnoPage() {
               Continuar
             </button>
           )}
-          {paso === 3 && (
+          {paso === 2 && (
             <button
               onClick={handleSubmit}
               disabled={loading}

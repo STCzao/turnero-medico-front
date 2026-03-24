@@ -3,7 +3,7 @@ import api from '../../../services/api'
 export const pacientesService = {
   // Propio perfil (cualquier rol autenticado)
   getMyProfile: () => api.get('/Pacientes/me'),
-  updateMyProfile: (data) => api.put('/Pacientes/me', data),
+  updateMyProfile: (id, data) => api.put(`/Pacientes/${id}`, data),
 
   // Admin / Secretaria
   getAll: ({ page = 1, pageSize = 20 } = {}) =>

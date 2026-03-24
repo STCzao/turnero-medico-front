@@ -4,20 +4,20 @@ import PageWrapper from '../../../components/layout/PageWrapper'
 import Modal, { ConfirmModal } from '../../../components/ui/Modal'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
-import { useObrasSociales } from '../hooks/useObrasSociales'
-import { obrasSocialesService } from '../services/obrasSocialesService'
-import { useEspecialidades } from '../../especialidades/hooks/useEspecialidades'
+import { useSecretarias } from '../../secretarias/hooks/useSecretarias'
+import { secretariasService } from '../../secretarias/services/secretariasService'
+import { authService } from '../../auth/services/authService'
 
 const PAGE_SIZE = 15
-const FORM_INICIAL = { nombre: '', especialidadIds: [], planes: [], observaciones: '' }
+const FORM_INICIAL = { nombre: '', apellido: '', email: '', password: '' }
 
-export default function GestionObrasSocialesPage() {
+export default function GestionSecretariasPage() {
   const [page, setPage] = useState(1)
-  const { items = [], totalCount = 0, loading, error, refetch } = useObrasSociales({ page, pageSize: PAGE_SIZE })
-  const { especialidades } = useEspecialidades()
+  const { items = [], totalCount = 0, loading, error, refetch } = useSecretarias({ page, pageSize: PAGE_SIZE })
+
   const totalPages = Math.ceil(totalCount / PAGE_SIZE)
 
-  const [modal, setModal] = useState(null)
+  const [modal, setModal] = useState(null)       // null | { mode: 'crear' | 'editar', item?: obj }
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [form, setForm] = useState(FORM_INICIAL)
   const [formError, setFormError] = useState(null)
@@ -30,50 +30,63 @@ export default function GestionObrasSocialesPage() {
     setModal({ mode: 'crear' })
   }
 
-  const openEditar = (os) => {
+  const openEditar = (sec) => {
     setForm({
-      nombre: os.nombre ?? '',
-      especialidadIds: os.especialidades?.map(e => e.id) ?? [],
-      planes: os.planes ?? [],
-      observaciones: os.observaciones ?? '',
+      nombre: sec.nombre ?? '',
+      apellido: sec.apellido ?? '',
+      email: sec.email ?? '',
+      password: '',
     })
     setFormError(null)
-    setModal({ mode: 'editar', item: os })
+    setModal({ mode: 'editar', item: sec })
   }
 
   const closeModal = () => setModal(null)
 
-  const toggleEspecialidad = (id) => {
-    setForm(f => ({
-      ...f,
-      especialidadIds: f.especialidadIds.includes(id)
-        ? f.especialidadIds.filter(x => x !== id)
-        : [...f.especialidadIds, id],
-    }))
-    setFormError(null)
-  }
-
   const handleSubmit = async () => {
-    const nombre = form.nombre.trim()
-    if (!nombre) { setFormError('El nombre es obligatorio'); return }
-    if (form.especialidadIds.length === 0) { setFormError('Seleccioná al menos una especialidad'); return }
+    if (!form.nombre.trim() || !form.apellido.trim() || !form.email.trim()) {
+      setFormError('Nombre, apellido y email son obligatorios')
+      return
+    }
+    if (modal.mode === 'crear') {
+      if (!form.password || form.password.length < 8) {
+        setFormError('La contraseña debe tener al menos 8 caracteres')
+        return
+      }
+      if (!/[A-Z]/.test(form.password)) {
+        setFormError('La contraseña debe incluir al menos una letra mayúscula')
+        return
+      }
+      if (!/[a-z]/.test(form.password)) {
+        setFormError('La contraseña debe incluir al menos una letra minúscula')
+        return
+      }
+      if (!/\d/.test(form.password)) {
+        setFormError('La contraseña debe incluir al menos un número')
+        return
+      }
+    }
     setSaving(true)
     try {
-      const payload = {
-        nombre,
-        especialidadIds: form.especialidadIds,
-        planes: form.planes,
-        observaciones: form.observaciones.trim(),
-      }
       if (modal.mode === 'crear') {
-        await obrasSocialesService.crear(payload)
+        await authService.registerSecretaria({
+          nombre: form.nombre.trim(),
+          apellido: form.apellido.trim(),
+          email: form.email.trim(),
+          password: form.password,
+        })
       } else {
-        await obrasSocialesService.actualizar(modal.item.id, payload)
+        await secretariasService.actualizar(modal.item.id, {
+          id: modal.item.id,
+          nombre: form.nombre.trim(),
+          apellido: form.apellido.trim(),
+          email: form.email.trim(),
+        })
       }
       await refetch()
       closeModal()
     } catch (err) {
-      setFormError(err.response?.data?.mensaje || 'Error al guardar')
+      setFormError(err.response?.data?.message || err.response?.data?.mensaje || 'Error al guardar')
     } finally {
       setSaving(false)
     }
@@ -82,11 +95,11 @@ export default function GestionObrasSocialesPage() {
   const handleDelete = async () => {
     setDeleting(true)
     try {
-      await obrasSocialesService.eliminar(confirmDelete.id)
+      await secretariasService.eliminar(confirmDelete.id)
       await refetch()
       setConfirmDelete(null)
     } catch {
-      // el backend puede rechazar si hay pacientes asociados
+      // silencioso
     } finally {
       setDeleting(false)
     }
@@ -97,8 +110,8 @@ export default function GestionObrasSocialesPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-deep font-black text-2xl md:text-3xl tracking-tight">Obras Sociales</h1>
-          <p className="text-deep/50 text-sm mt-1">Datos maestros del sistema</p>
+          <h1 className="text-deep font-black text-2xl md:text-3xl tracking-tight">Secretarias</h1>
+          <p className="text-deep/50 text-sm mt-1">Administrá las cuentas del personal de secretaría</p>
         </div>
         <Button onClick={openCrear} size="sm">+ Nueva</Button>
       </div>
@@ -125,7 +138,7 @@ export default function GestionObrasSocialesPage() {
       {/* Vacío */}
       {!loading && !error && items.length === 0 && (
         <div className="text-center py-20 text-deep/30">
-          <p className="text-sm">No hay obras sociales registradas</p>
+          <p className="text-sm">No hay secretarias registradas</p>
         </div>
       )}
 
@@ -133,41 +146,47 @@ export default function GestionObrasSocialesPage() {
       {!loading && !error && items.length > 0 && (
         <>
           <p className="text-xs text-deep/40 mb-3">
-            {totalCount} obra{totalCount !== 1 ? 's' : ''} social{totalCount !== 1 ? 'es' : ''}
+            {totalCount} secretaria{totalCount !== 1 ? 's' : ''}
           </p>
 
           <div className="bg-white rounded-2xl border border-deep/5 shadow-sm overflow-hidden">
-            {/* Header tabla — solo desktop */}
-            <div className="hidden md:grid md:grid-cols-[2fr_1fr_auto] gap-4 px-5 py-3 border-b border-deep/5 bg-deep/[0.02]">
+            <div className="hidden md:grid md:grid-cols-[1.5fr_1.5fr_auto] gap-4 px-5 py-3 border-b border-deep/5 bg-deep/[0.02]">
               <span className="text-[10px] font-bold text-deep/40 uppercase tracking-widest">Nombre</span>
-              <span className="text-[10px] font-bold text-deep/40 uppercase tracking-widest">Especialidades</span>
+              <span className="text-[10px] font-bold text-deep/40 uppercase tracking-widest">Email</span>
               <span />
             </div>
 
             <AnimatePresence>
-              {items.map((os, idx) => (
+              {items.map((sec, idx) => (
                 <motion.div
-                  key={os.id}
+                  key={sec.id}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className={`px-5 py-4 flex flex-col md:grid md:grid-cols-[2fr_1fr_auto] md:items-center gap-1 md:gap-4 ${
+                  className={`px-5 py-4 flex flex-col md:grid md:grid-cols-[1.5fr_1.5fr_auto] md:items-center gap-1 md:gap-4 ${
                     idx < items.length - 1 ? 'border-b border-deep/5' : ''
                   }`}
                 >
-                  <p className="text-sm font-semibold text-deep">{os.nombre}</p>
-                  <p className="text-xs text-deep/50">
-                    {os.especialidades?.map(e => e.nombre).join(', ') || '—'}
-                  </p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-sky/20 flex items-center justify-center shrink-0">
+                      <span className="text-navy text-xs font-bold">
+                        {sec.nombre?.[0]}{sec.apellido?.[0]}
+                      </span>
+                    </div>
+                    <p className="text-sm font-semibold text-deep">
+                      {sec.nombre} {sec.apellido}
+                    </p>
+                  </div>
+                  <p className="text-sm text-deep/50 truncate">{sec.email ?? '—'}</p>
                   <div className="flex gap-2 shrink-0 self-start md:self-auto">
                     <button
-                      onClick={() => openEditar(os)}
+                      onClick={() => openEditar(sec)}
                       className="text-xs font-medium text-deep/50 hover:text-deep transition-colors px-2 py-1 rounded-lg hover:bg-deep/5"
                     >
                       Editar
                     </button>
                     <button
-                      onClick={() => setConfirmDelete(os)}
+                      onClick={() => setConfirmDelete(sec)}
                       className="text-xs font-medium text-red-400 hover:text-red-600 transition-colors px-2 py-1 rounded-lg hover:bg-red-50"
                     >
                       Eliminar
@@ -221,7 +240,7 @@ export default function GestionObrasSocialesPage() {
       <Modal
         isOpen={!!modal}
         onClose={closeModal}
-        title={modal?.mode === 'crear' ? 'Nueva obra social' : 'Editar obra social'}
+        title={modal?.mode === 'crear' ? 'Nueva secretaria' : 'Editar secretaria'}
         size="sm"
         footer={
           <>
@@ -231,50 +250,45 @@ export default function GestionObrasSocialesPage() {
         }
       >
         <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              label="Nombre"
+              id="nombre"
+              value={form.nombre}
+              onChange={e => { setForm(f => ({ ...f, nombre: e.target.value })); setFormError(null) }}
+              placeholder="Ej: María"
+              required
+            />
+            <Input
+              label="Apellido"
+              id="apellido"
+              value={form.apellido}
+              onChange={e => { setForm(f => ({ ...f, apellido: e.target.value })); setFormError(null) }}
+              placeholder="Ej: López"
+              required
+            />
+          </div>
+
           <Input
-            label="Nombre"
-            id="nombre"
-            value={form.nombre}
-            onChange={e => { setForm(f => ({ ...f, nombre: e.target.value })); setFormError(null) }}
-            placeholder="Ej: OSDE"
+            label="Email"
+            id="email"
+            type="email"
+            value={form.email}
+            onChange={e => { setForm(f => ({ ...f, email: e.target.value })); setFormError(null) }}
+            placeholder="Ej: secretaria@clinica.com"
             required
           />
 
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-navy">
-              Especialidades cubiertas <span className="text-red-400">*</span>
-            </label>
-            <div className="grid grid-cols-2 gap-1.5 max-h-48 overflow-y-auto pr-1">
-              {especialidades.map(esp => {
-                const checked = form.especialidadIds.includes(esp.id)
-                return (
-                  <button
-                    key={esp.id}
-                    type="button"
-                    onClick={() => toggleEspecialidad(esp.id)}
-                    className={`text-left text-xs px-3 py-2 rounded-lg border font-medium transition-all ${
-                      checked
-                        ? 'bg-deep text-mint border-deep'
-                        : 'bg-deep/5 text-deep/70 border-transparent hover:bg-deep/10 hover:text-deep'
-                    }`}
-                  >
-                    {esp.nombre}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-navy">Observaciones <span className="text-deep/30 font-normal">(opcional)</span></label>
-            <textarea
-              value={form.observaciones}
-              onChange={e => setForm(f => ({ ...f, observaciones: e.target.value }))}
-              placeholder="Copagos, restricciones, condiciones especiales..."
-              rows={2}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-navy bg-white outline-none focus:border-deep focus:ring-2 focus:ring-deep/20 transition-colors resize-none"
+          {modal?.mode === 'crear' && (
+            <Input
+              label="Contraseña inicial"
+              id="password"
+              type="password"
+              value={form.password}
+              onChange={e => { setForm(f => ({ ...f, password: e.target.value })); setFormError(null) }}
+              placeholder="Mínimo 8 caracteres, mayúscula y número"
             />
-          </div>
+          )}
 
           {formError && <p className="text-xs text-red-500">{formError}</p>}
         </div>
@@ -285,8 +299,8 @@ export default function GestionObrasSocialesPage() {
         isOpen={!!confirmDelete}
         onClose={() => setConfirmDelete(null)}
         onConfirm={handleDelete}
-        title="Eliminar obra social"
-        message={`¿Eliminar "${confirmDelete?.nombre}"? Esta acción no se puede deshacer.`}
+        title="Eliminar secretaria"
+        message={`¿Eliminar a ${confirmDelete?.nombre} ${confirmDelete?.apellido}? Esta acción no se puede deshacer.`}
         confirmLabel="Eliminar"
         variant="danger"
         loading={deleting}

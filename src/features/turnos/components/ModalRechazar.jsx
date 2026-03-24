@@ -19,8 +19,12 @@ export default function ModalRechazar({ turno, isOpen, onClose, onSuccess }) {
       setError('El motivo de rechazo es obligatorio')
       return
     }
+    if (motivo.trim().length < 5) {
+      setError('El motivo debe tener al menos 5 caracteres')
+      return
+    }
     try {
-      await rechazar(turno.id, { motivo: motivo.trim() })
+      await rechazar(turno.id, { motivoRechazo: motivo.trim() })
       handleClose()
     } catch {
       // el error ya lo maneja useTurnoActions

@@ -10,6 +10,8 @@ import SolicitarTurnoPage from '../features/turnos/pages/SolicitarTurnoPage'
 import MiAgendaPage from '../features/turnos/pages/MiAgendaPage'
 import PerfilPacientePage from '../features/pacientes/pages/PerfilPacientePage'
 import DependientesPage from '../features/pacientes/pages/DependientesPage'
+import PerfilPage from '../pages/PerfilPage'
+import { TODOS_LOS_ROLES } from '../constants/roles'
 import PacienteHomePage from '../features/pacientes/pages/PacienteHomePage'
 import HistorialPage from '../features/turnos/pages/HistorialPage'
 import GestionPendientesPage from '../features/turnos/pages/GestionPendientesPage'
@@ -20,6 +22,7 @@ import GestionEspecialidadesPage from '../features/especialidades/pages/GestionE
 import GestionObrasSocialesPage from '../features/obrasSociales/pages/GestionObrasSocialesPage'
 import AdminDashboardPage from '../features/admin/pages/AdminDashboardPage'
 import AdminHorariosPage from '../features/admin/pages/AdminHorariosPage'
+import GestionSecretariasPage from '../features/admin/pages/GestionSecretariasPage'
 
 
 export default function AppRouter() {
@@ -34,12 +37,16 @@ export default function AppRouter() {
 
         <Route path="/" element={<Navigate to={ROUTES.LOGIN} replace />} />
 
+        {/* Perfil — todos los roles autenticados */}
+        <Route element={<PrivateRoute roles={TODOS_LOS_ROLES} />}>
+          <Route path={ROUTES.PERFIL} element={<PerfilPage />} />
+        </Route>
+
         {/* Paciente */}
         <Route element={<PrivateRoute roles={[ROLES.PACIENTE]} />}>
           <Route path={ROUTES.HOME} element={<PacienteHomePage />} />
           <Route path={ROUTES.MIS_TURNOS} element={<MisTurnosPage />} />
           <Route path={ROUTES.SOLICITAR_TURNO} element={<SolicitarTurnoPage />} />
-          <Route path={ROUTES.PERFIL} element={<PerfilPacientePage />} />
           <Route path={ROUTES.DEPENDIENTES} element={<DependientesPage />} />
           <Route path={ROUTES.HISTORIAL} element={<HistorialPage />} />
         </Route>
@@ -63,6 +70,7 @@ export default function AppRouter() {
         <Route element={<PrivateRoute roles={[ROLES.ADMIN]} />}>
           <Route path={ROUTES.ADMIN_DASHBOARD} element={<AdminDashboardPage />} />
           <Route path={ROUTES.ADMIN_HORARIOS} element={<AdminHorariosPage />} />
+          <Route path={ROUTES.ADMIN_USUARIOS} element={<GestionSecretariasPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

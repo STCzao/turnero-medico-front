@@ -33,7 +33,9 @@ function NavCard({ to, title, description, icon }) {
       className="bg-white rounded-2xl border border-deep/5 shadow-sm p-5 flex items-start gap-4 hover:border-deep/20 hover:shadow-md transition-all group"
     >
       <div className="w-10 h-10 rounded-xl bg-deep/5 flex items-center justify-center shrink-0 group-hover:bg-teal/10 transition-colors">
-        <span className="text-lg">{icon}</span>
+        <svg className="w-5 h-5 text-deep/50 group-hover:text-teal transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+          {icon}
+        </svg>
       </div>
       <div>
         <p className="text-sm font-semibold text-deep">{title}</p>
@@ -56,10 +58,10 @@ export default function AdminDashboardPage() {
     ])
       .then(([pendientes, turnos, medicos, pacientes]) => {
         setStats({
-          turnosPendientes: pendientes.data.totalCount,
-          totalTurnos:      turnos.data.totalCount,
-          totalMedicos:     medicos.data.totalCount,
-          totalPacientes:   pacientes.data.totalCount,
+          turnosPendientes: pendientes.data.total,
+          totalTurnos:      turnos.data.total,
+          totalMedicos:     medicos.data.total,
+          totalPacientes:   pacientes.data.total,
         })
       })
       .finally(() => setLoading(false))
@@ -88,25 +90,31 @@ export default function AdminDashboardPage() {
           to={ROUTES.TURNOS_PENDIENTES}
           title="Solicitudes pendientes"
           description="Confirmar o rechazar turnos"
-          icon="📋"
+          icon={<path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />}
         />
         <NavCard
           to={ROUTES.GESTION_TURNOS}
           title="Todos los turnos"
           description="Ver y filtrar todos los turnos"
-          icon="🗓️"
+          icon={<path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />}
         />
         <NavCard
           to={ROUTES.GESTION_MEDICOS}
           title="Médicos"
           description="Listado de médicos del sistema"
-          icon="👨‍⚕️"
+          icon={<path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />}
         />
         <NavCard
           to={ROUTES.GESTION_PACIENTES}
           title="Pacientes"
           description="Listado de pacientes registrados"
-          icon="🧑‍🤝‍🧑"
+          icon={<path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0" />}
+        />
+        <NavCard
+          to={ROUTES.ADMIN_USUARIOS}
+          title="Secretarias"
+          description="Crear cuentas para el personal de secretaría"
+          icon={<path strokeLinecap="round" strokeLinejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c0 1.306.835 2.417 2 2.83V19h-4v-2.17A3.001 3.001 0 017 14z" />}
         />
       </div>
 
@@ -116,19 +124,19 @@ export default function AdminDashboardPage() {
           to={ROUTES.GESTION_ESPECIALIDADES}
           title="Especialidades"
           description="Crear, editar y eliminar especialidades"
-          icon="🩺"
+          icon={<path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />}
         />
         <NavCard
           to={ROUTES.GESTION_OBRAS_SOCIALES}
           title="Obras Sociales"
           description="Crear, editar y eliminar obras sociales"
-          icon="🏥"
+          icon={<path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />}
         />
         <NavCard
           to={ROUTES.ADMIN_HORARIOS}
           title="Horarios de médicos"
           description="Configurar disponibilidad semanal"
-          icon="🕐"
+          icon={<path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />}
         />
       </div>
     </PageWrapper>

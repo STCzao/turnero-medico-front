@@ -65,8 +65,8 @@ export default function PerfilPacientePage() {
         nombre:          editForm.nombre.trim(),
         apellido:        editForm.apellido.trim(),
         email:           editForm.email.trim(),
-        telefono:        editForm.telefono.trim() || null,
-        fechaNacimiento: editForm.fechaNacimiento || null,
+        telefono:        editForm.telefono.trim() || perfil.telefono || '',
+        fechaNacimiento: editForm.fechaNacimiento || perfil.fechaNacimiento?.split('T')[0] || '',
       })
       setEditing(false)
     } catch (err) {

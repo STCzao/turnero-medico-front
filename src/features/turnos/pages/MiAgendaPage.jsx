@@ -122,7 +122,7 @@ export default function MiAgendaPage() {
   const { actualizar, loading: actionLoading } = useTurnoActions(refetch)
 
   const handleAction = (id, estado) => {
-    actualizar(id, { estado: estado === 'completado' ? ESTADO_TURNO.COMPLETADO : ESTADO_TURNO.AUSENTE })
+    actualizar(id, { id, estado: estado === 'completado' ? ESTADO_TURNO.COMPLETADO : ESTADO_TURNO.AUSENTE })
   }
 
   const confirmados = turnos.filter(t => t.estado === ESTADO_TURNO.CONFIRMADO)

@@ -11,7 +11,7 @@ export function usePacientesPaginados({ page = 1, pageSize = 20 } = {}) {
     setError(null)
     try {
       const { data } = await pacientesService.getAll({ page, pageSize })
-      setResultado(data)
+      setResultado({ ...data, totalCount: data.total })
     } catch (err) {
       setError(err.response?.data?.mensaje || 'Error al cargar pacientes')
     } finally {
@@ -45,9 +45,9 @@ export function useMyProfile() {
   useEffect(() => { fetch() }, [fetch])
 
   const update = useCallback(async (formData) => {
-    await pacientesService.updateMyProfile(formData)
+    await pacientesService.updateMyProfile(perfil.id, { ...formData, id: perfil.id, dni: perfil.dni })
     await fetch()
-  }, [fetch])
+  }, [fetch, perfil])
 
   return { perfil, loading, error, refetch: fetch, update }
 }

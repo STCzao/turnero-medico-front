@@ -60,11 +60,11 @@ export default function AdminHorariosPage() {
     setSaving(true)
     try {
       await horariosService.crear({
-        doctorId,
+        doctorId:         Number(doctorId),
         diaSemana:        Number(form.diaSemana),
         horaInicio:       form.horaInicio,
         horaFin:          form.horaFin,
-        intervaloMinutos: Number(form.intervaloMinutos),
+        duracionMinutos:   Number(form.intervaloMinutos),
       })
       await fetchHorarios()
       setModalAgregar(false)
@@ -179,7 +179,7 @@ export default function AdminHorariosPage() {
                     <p className="text-sm font-semibold text-deep">{labelDia(h.diaSemana)}</p>
                     <p className="text-sm text-deep/60">{h.horaInicio}</p>
                     <p className="text-sm text-deep/60">{h.horaFin}</p>
-                    <p className="text-sm text-deep/50">{h.intervaloMinutos} min</p>
+                    <p className="text-sm text-deep/50">{h.duracionMinutos} min</p>
                     <button
                       onClick={() => setConfirmDelete(h)}
                       className="text-xs font-medium text-red-400 hover:text-red-600 transition-colors px-2 py-1 rounded-lg hover:bg-red-50 self-start md:self-auto"

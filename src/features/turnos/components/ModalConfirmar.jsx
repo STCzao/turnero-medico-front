@@ -10,7 +10,7 @@ export default function ModalConfirmar({ turno, isOpen, onClose, onSuccess }) {
   const [slot, setSlot] = useState('')
 
   const { confirmar, loading, error: submitError } = useTurnoActions(onSuccess)
-  const { medicos, loading: loadingMedicos } = useMedicosByEspecialidad(turno?.especialidadNombre)
+  const { medicos, loading: loadingMedicos } = useMedicosByEspecialidad(turno?.especialidadId)
   const { slots, loading: loadingSlots } = useDisponibilidad(
     doctorId || null,
     fecha || null
@@ -24,8 +24,9 @@ export default function ModalConfirmar({ turno, isOpen, onClose, onSuccess }) {
   }
 
   const handleSubmit = async () => {
-    const slotStr = typeof slot === 'string' ? slot : slot?.hora ?? slot?.hora ?? ''
-    const fechaHora = `${fecha}T${slotStr.length === 5 ? slotStr + ':00' : slotStr}`
+    const fechaHora = typeof slot === 'string'
+      ? `${fecha}T${slot.length === 5 ? slot + ':00' : slot}`
+      : slot?.fechaHora
     try {
       await confirmar(turno.id, { doctorId: Number(doctorId), fechaHora })
       handleClose()
@@ -133,7 +134,7 @@ export default function ModalConfirmar({ turno, isOpen, onClose, onSuccess }) {
             ) : (
               <div className="grid grid-cols-3 gap-1.5">
                 {slots.map((s) => {
-                  const valor = typeof s === 'string' ? s : (s?.hora ?? s?.time ?? '')
+                  const valor = typeof s === 'string' ? s : (s?.fechaHora ? s.fechaHora.substring(11, 16) : '')
                   const isSelected = slot === s
                   return (
                     <button
