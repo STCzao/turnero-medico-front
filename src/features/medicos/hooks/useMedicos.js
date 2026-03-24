@@ -12,7 +12,7 @@ export function useMedicos({ page = 1, pageSize = 20 } = {}) {
     setError(null)
     try {
       const { data } = await medicosService.getAll({ page, pageSize })
-      setResultado(data)
+      setResultado({ ...data, totalCount: data.total })
     } catch (err) {
       setError(err.response?.data?.mensaje || 'Error al cargar doctores')
     } finally {
@@ -36,9 +36,14 @@ export function useMedicosByEspecialidad(especialidad) {
     setError(null)
     try {
       const { data } = await medicosService.getByEspecialidad(especialidad)
-      setMedicos(data)
+      setMedicos(Array.isArray(data) ? data : [])
     } catch (err) {
-      setError(err.response?.data?.mensaje || 'Error al filtrar doctores')
+      // El backend devuelve 404 cuando no hay doctores para esa especialidad → tratar como lista vacía
+      if (err.response?.status === 404) {
+        setMedicos([])
+      } else {
+        setError(err.response?.data?.mensaje || 'Error al filtrar doctores')
+      }
     } finally {
       setLoading(false)
     }

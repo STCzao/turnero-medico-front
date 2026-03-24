@@ -12,7 +12,7 @@ export function useMisTurnos(estado) {
     setError(null)
     try {
       const { data } = await turnosService.getMisTurnos(estado)
-      setTurnos(data)
+      setTurnos(Array.isArray(data) ? data : (data?.items ?? data?.data ?? []))
     } catch (err) {
       setError(err.response?.data?.mensaje || 'Error al cargar turnos')
     } finally {
@@ -36,7 +36,7 @@ export function useTurnosPaginados({ page = 1, pageSize = 20, estado } = {}) {
     setError(null)
     try {
       const { data } = await turnosService.getAll({ page, pageSize, estado })
-      setResultado(data)
+      setResultado({ ...data, totalCount: data.total })
     } catch (err) {
       setError(err.response?.data?.mensaje || 'Error al cargar turnos')
     } finally {
@@ -60,7 +60,7 @@ export function useTurnosPendientes({ page = 1, pageSize = 20 } = {}) {
     setError(null)
     try {
       const { data } = await turnosService.getPendientes({ page, pageSize })
-      setResultado(data)
+      setResultado({ ...data, totalCount: data.total })
     } catch (err) {
       setError(err.response?.data?.mensaje || 'Error al cargar pendientes')
     } finally {
@@ -103,6 +103,30 @@ export function useTurnoActions(onSuccess) {
   return { crear, confirmar, rechazar, cancelar, actualizar, loading, error }
 }
 
+// Hook para Paciente/Doctor — ver su propio historial clínico (turnos completados)
+export function useHistorial() {
+  const [turnos, setTurnos] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  const fetch = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const { data } = await turnosService.getMisTurnos('Completado')
+      setTurnos(Array.isArray(data) ? data : (data?.items ?? data?.data ?? []))
+    } catch (err) {
+      setError(err.response?.data?.mensaje || 'Error al cargar el historial')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { fetch() }, [fetch])
+
+  return { turnos, loading, error, refetch: fetch }
+}
+
 // Hook para Doctor — agenda del día por fecha
 export function useAgendaDoctor(fecha) {
   const [turnos, setTurnos] = useState([])
@@ -114,7 +138,7 @@ export function useAgendaDoctor(fecha) {
     setError(null)
     try {
       const { data } = await turnosService.getMyAgenda(fecha)
-      setTurnos(data)
+      setTurnos(Array.isArray(data) ? data : (data?.items ?? data?.data ?? []))
     } catch (err) {
       setError(err.response?.data?.mensaje || 'Error al cargar la agenda')
     } finally {

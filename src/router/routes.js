@@ -4,6 +4,7 @@ export const ROUTES = {
   REGISTER: '/register',
 
   // Paciente
+  HOME: '/inicio',
   MIS_TURNOS: '/mis-turnos',
   SOLICITAR_TURNO: '/mis-turnos/solicitar',
   PERFIL: '/perfil',
@@ -19,6 +20,7 @@ export const ROUTES = {
   GESTION_MEDICOS: '/gestion/medicos',
   GESTION_PACIENTES: '/gestion/pacientes',
   GESTION_OBRAS_SOCIALES: '/gestion/obras-sociales',
+  GESTION_ESPECIALIDADES: '/gestion/especialidades',
 
   // Admin
   ADMIN_DASHBOARD: '/admin',

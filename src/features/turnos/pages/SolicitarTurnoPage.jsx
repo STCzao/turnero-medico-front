@@ -5,20 +5,9 @@ import PageWrapper from '../../../components/layout/PageWrapper'
 import { useMedicosByEspecialidad } from '../../medicos/hooks/useMedicos'
 import { useTurnoActions } from '../hooks/useTurnos'
 import { ROUTES } from '../../../router/routes'
-
-const ESPECIALIDADES = [
-  'Clínica Médica',
-  'Cardiología',
-  'Dermatología',
-  'Traumatología',
-  'Ginecología',
-  'Oftalmología',
-  'Neurología',
-  'Pediatría',
-  'Psiquiatría',
-  'Otorrinolaringología',
-]
-
+import { useEspecialidades } from '../../especialidades/hooks/useEspecialidades'
+import { validate, rules } from '../../../utils/validators'
+import { useMyProfile } from '../../pacientes/hooks/usePacientes'
 const PASOS = ['Especialidad', 'Detalles', 'Confirmar']
 
 function StepIndicator({ paso }) {
@@ -52,45 +41,50 @@ export default function SolicitarTurnoPage() {
   const navigate = useNavigate()
   const [paso, setPaso] = useState(0)
   const [form, setForm] = useState({
-    especialidad: '',
-    motivoConsulta: '',
+    paraMi: true,
+    dependienteId: '',
+    dependienteNombre: '',
+    especialidadId: '',
+    especialidadNombre: '',
+    motivo: '',
     doctorId: '',
   })
   const [errors, setErrors] = useState({})
 
-  const { medicos, loading: loadingMedicos } = useMedicosByEspecialidad(form.especialidad)
+  const { perfil } = useMyProfile()
+
+  const { especialidades, loading: loadingEsp } = useEspecialidades()
+
+  const { medicos, loading: loadingMedicos } = useMedicosByEspecialidad(form.especialidadId)
   const { crear, loading, error: submitError } = useTurnoActions(() => {
     navigate(ROUTES.MIS_TURNOS, { state: { turnoSolicitado: true } })
   })
 
-  // ── Paso 0: Especialidad ──────────────────────────────────────────────────
-  const validarPaso0 = () => {
-    if (!form.especialidad) return { especialidad: 'Seleccioná una especialidad' }
-    return {}
-  }
-
-  // ── Paso 1: Detalles ─────────────────────────────────────────────────────
-  const validarPaso1 = () => {
-    if (!form.motivoConsulta.trim()) return { motivoConsulta: 'Describí el motivo de tu consulta' }
-    if (form.motivoConsulta.trim().length < 10) return { motivoConsulta: 'Por favor dá un poco más de detalle (mínimo 10 caracteres)' }
-    return {}
-  }
-
   const avanzar = () => {
-    const validar = paso === 0 ? validarPaso0 : validarPaso1
-    const errs = validar()
-    if (Object.keys(errs).length) { setErrors(errs); return }
+    if (paso === 0) {
+      const errs = validate({ especialidadId: [rules.required('Seleccioná una especialidad')] }, form)
+      if (Object.keys(errs).length) { setErrors(errs); return }
+    }
+    if (paso === 1) {
+      const errs = validate({ motivo: [rules.required('Describí el motivo de tu consulta'), rules.minLength(5)] }, form)
+      if (Object.keys(errs).length) { setErrors(errs); return }
+    }
     setErrors({})
     setPaso(p => p + 1)
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const payload = {
-      especialidad: form.especialidad,
-      motivoConsulta: form.motivoConsulta.trim(),
+      pacienteId: perfil?.id,
+      especialidadId: Number(form.especialidadId),
+      motivo: form.motivo.trim(),
       ...(form.doctorId && { doctorId: Number(form.doctorId) }),
     }
-    crear(payload)
+    try {
+      await crear(payload)
+    } catch {
+      // el error ya se muestra vía submitError
+    }
   }
 
   return (
@@ -98,22 +92,22 @@ export default function SolicitarTurnoPage() {
       {/* Header */}
       <div className="mb-6">
         <button
-          onClick={() => paso > 0 ? setPaso(p => p - 1) : navigate(ROUTES.MIS_TURNOS)}
+          onClick={() => paso > 0 ? setPaso(p => p - 1) : navigate(ROUTES.HOME)}
           className="flex items-center gap-1.5 text-deep/40 hover:text-deep text-sm font-medium transition-colors mb-4"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
-          {paso > 0 ? 'Atrás' : 'Mis turnos'}
+          {paso > 0 ? 'Atrás' : 'Volver'}
         </button>
-        <h1 className="text-deep font-black text-3xl tracking-tight">Solicitar turno</h1>
+        <h1 className="text-deep font-black text-2xl md:text-3xl tracking-tight">Solicitar turno</h1>
         <p className="text-deep/50 text-sm mt-1">Tu solicitud será revisada y confirmada por el equipo médico</p>
       </div>
 
-      <div className="max-w-lg">
+      <div className="w-full max-w-2xl mx-auto">
         <StepIndicator paso={paso} />
 
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-deep/5">
+        <div className="bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-deep/5">
           <AnimatePresence mode="wait">
             {/* ── Paso 0 — Especialidad ── */}
             {paso === 0 && (
@@ -121,25 +115,33 @@ export default function SolicitarTurnoPage() {
                 <h2 className="text-deep font-bold text-lg mb-1">¿Qué especialidad necesitás?</h2>
                 <p className="text-deep/40 text-sm mb-5">Seleccioná la especialidad médica más adecuada a tu consulta</p>
 
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {ESPECIALIDADES.map((esp) => (
-                    <button
-                      key={esp}
-                      type="button"
-                      onClick={() => { setForm(f => ({ ...f, especialidad: esp, doctorId: '' })); setErrors({}) }}
-                      className={`text-left text-sm px-4 py-3 rounded-xl border font-medium transition-all ${
-                        form.especialidad === esp
-                          ? 'bg-deep text-mint border-deep'
-                          : 'bg-deep/5 text-deep/70 border-transparent hover:bg-deep/10 hover:text-deep'
-                      }`}
-                    >
-                      {esp}
-                    </button>
-                  ))}
-                </div>
+                {loadingEsp ? (
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <div key={i} className="h-12 bg-deep/5 rounded-xl animate-pulse" />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {especialidades.map((esp) => (
+                      <button
+                        key={esp.id}
+                        type="button"
+                        onClick={() => { setForm(f => ({ ...f, especialidadId: esp.id, especialidadNombre: esp.nombre, doctorId: '' })); setErrors({}) }}
+                        className={`text-left text-sm px-4 py-3 rounded-xl border font-medium transition-all ${
+                          form.especialidadId === esp.id
+                            ? 'bg-deep text-mint border-deep'
+                            : 'bg-deep/5 text-deep/70 border-transparent hover:bg-deep/10 hover:text-deep'
+                        }`}
+                      >
+                        {esp.nombre}
+                      </button>
+                    ))}
+                  </div>
+                )}
 
-                {errors.especialidad && (
-                  <p className="text-red-500 text-xs mt-3">{errors.especialidad}</p>
+                {errors.especialidadId && (
+                  <p className="text-red-500 text-xs mt-3">{errors.especialidadId}</p>
                 )}
               </motion.div>
             )}
@@ -156,15 +158,15 @@ export default function SolicitarTurnoPage() {
                     Motivo de consulta <span className="text-red-400">*</span>
                   </label>
                   <textarea
-                    value={form.motivoConsulta}
-                    onChange={(e) => { setForm(f => ({ ...f, motivoConsulta: e.target.value })); setErrors({}) }}
+                    value={form.motivo}
+                    onChange={(e) => { setForm(f => ({ ...f, motivo: e.target.value })); setErrors({}) }}
                     placeholder="Describí brevemente tus síntomas o el motivo de la consulta..."
                     rows={3}
                     className={`w-full bg-deep/5 border rounded-xl px-4 py-3 text-deep text-sm placeholder-deep/25 focus:outline-none transition-all resize-none
-                      ${errors.motivoConsulta ? 'border-red-400/60 focus:border-red-400' : 'border-transparent focus:border-teal'}`}
+                      ${errors.motivo ? 'border-red-400/60 focus:border-red-400' : 'border-transparent focus:border-teal'}`}
                   />
-                  {errors.motivoConsulta && (
-                    <p className="text-red-500 text-xs mt-1.5">{errors.motivoConsulta}</p>
+                  {errors.motivo && (
+                    <p className="text-red-500 text-xs mt-1.5">{errors.motivo}</p>
                   )}
                 </div>
 
@@ -176,7 +178,7 @@ export default function SolicitarTurnoPage() {
                   {loadingMedicos ? (
                     <div className="h-11 bg-deep/5 rounded-xl animate-pulse" />
                   ) : medicos.length === 0 ? (
-                    <p className="text-deep/30 text-sm italic">No hay médicos registrados para {form.especialidad}</p>
+                    <p className="text-deep/30 text-sm italic">No hay médicos registrados para {form.especialidadNombre}</p>
                   ) : (
                     <select
                       value={form.doctorId}
@@ -202,8 +204,8 @@ export default function SolicitarTurnoPage() {
                 <p className="text-deep/40 text-sm mb-5">Confirmá los datos antes de enviar</p>
 
                 <div className="space-y-3 mb-6">
-                  <Row label="Especialidad" value={form.especialidad} />
-                  <Row label="Motivo de consulta" value={form.motivoConsulta} />
+                  <Row label="Especialidad" value={form.especialidadNombre} />
+                  <Row label="Motivo de consulta" value={form.motivo} />
                   <Row
                     label="Médico preferido"
                     value={
@@ -221,7 +223,7 @@ export default function SolicitarTurnoPage() {
                 )}
 
                 <div className="bg-sky/10 border border-sky/20 rounded-xl px-4 py-3 text-sky text-xs leading-relaxed">
-                  📋 Tu turno quedará como <strong>pendiente</strong> hasta que el equipo de secretaría lo confirme y te asigne fecha y hora.
+                  Tu turno quedará como <strong>pendiente</strong> hasta que el equipo de secretaría lo confirme y te asigne fecha y hora.
                 </div>
               </motion.div>
             )}
@@ -233,7 +235,7 @@ export default function SolicitarTurnoPage() {
           {paso < 2 && (
             <button
               onClick={avanzar}
-              className="flex-1 bg-deep text-mint font-bold text-sm py-3 rounded-xl hover:bg-navy transition-colors"
+              className="flex-1 bg-deep text-mint font-bold text-sm py-4 rounded-xl hover:bg-navy transition-colors"
             >
               Continuar
             </button>
@@ -242,7 +244,7 @@ export default function SolicitarTurnoPage() {
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className="flex-1 bg-deep text-mint font-bold text-sm py-3 rounded-xl hover:bg-navy transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex-1 bg-deep text-mint font-bold text-sm py-4 rounded-xl hover:bg-navy transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">

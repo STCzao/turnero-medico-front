@@ -50,12 +50,10 @@ function TurnoAgendaRow({ turno, onAction, actionLoading }) {
       {/* Info paciente */}
       <div className="flex-1 min-w-0">
         <p className="text-deep font-bold text-sm truncate">
-          {turno.paciente
-            ? `${turno.paciente.nombre} ${turno.paciente.apellido}`
-            : 'Paciente desconocido'}
+          {turno.pacienteNombre || "Paciente desconocido"}
         </p>
-        {turno.motivoConsulta && (
-          <p className="text-deep/45 text-xs mt-0.5 line-clamp-1">{turno.motivoConsulta}</p>
+        {turno.motivo && (
+          <p className="text-deep/45 text-xs mt-0.5 line-clamp-1">{turno.motivo}</p>
         )}
       </div>
 
@@ -124,7 +122,7 @@ export default function MiAgendaPage() {
   const { actualizar, loading: actionLoading } = useTurnoActions(refetch)
 
   const handleAction = (id, estado) => {
-    actualizar(id, { estado: estado === 'completado' ? ESTADO_TURNO.COMPLETADO : ESTADO_TURNO.AUSENTE })
+    actualizar(id, { id, estado: estado === 'completado' ? ESTADO_TURNO.COMPLETADO : ESTADO_TURNO.AUSENTE })
   }
 
   const confirmados = turnos.filter(t => t.estado === ESTADO_TURNO.CONFIRMADO)
@@ -135,7 +133,7 @@ export default function MiAgendaPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-deep font-black text-3xl tracking-tight">Mi Agenda</h1>
+          <h1 className="text-deep font-black text-2xl md:text-3xl tracking-tight">Mi Agenda</h1>
           <p className="text-deep/50 text-sm mt-1">{turnos.length} turno{turnos.length !== 1 ? 's' : ''} para este día</p>
         </div>
         <NavFecha fecha={fecha} onPrev={() => moverDia(-1)} onNext={() => moverDia(1)} />
@@ -161,7 +159,6 @@ export default function MiAgendaPage() {
       {/* Vacío */}
       {!loading && !error && turnos.length === 0 && (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="text-center py-20">
-          <p className="text-4xl mb-3">📭</p>
           <p className="text-deep font-bold text-lg">Sin turnos para este día</p>
           <p className="text-deep/40 text-sm mt-1">No tenés pacientes agendados</p>
         </motion.div>

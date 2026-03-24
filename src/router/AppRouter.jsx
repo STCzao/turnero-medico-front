@@ -8,16 +8,22 @@ import RegisterPage from '../features/auth/pages/RegisterPage'
 import MisTurnosPage from '../features/turnos/pages/MisTurnosPage'
 import SolicitarTurnoPage from '../features/turnos/pages/SolicitarTurnoPage'
 import MiAgendaPage from '../features/turnos/pages/MiAgendaPage'
-import PageWrapper from '../components/layout/PageWrapper'
+import PerfilPacientePage from '../features/pacientes/pages/PerfilPacientePage'
+import DependientesPage from '../features/pacientes/pages/DependientesPage'
+import PerfilPage from '../pages/PerfilPage'
+import { TODOS_LOS_ROLES } from '../constants/roles'
+import PacienteHomePage from '../features/pacientes/pages/PacienteHomePage'
+import HistorialPage from '../features/turnos/pages/HistorialPage'
+import GestionPendientesPage from '../features/turnos/pages/GestionPendientesPage'
+import GestionTurnosPage from '../features/turnos/pages/GestionTurnosPage'
+import GestionPacientesPage from '../features/pacientes/pages/GestionPacientesPage'
+import GestionMedicosPage from '../features/medicos/pages/GestionMedicosPage'
+import GestionEspecialidadesPage from '../features/especialidades/pages/GestionEspecialidadesPage'
+import GestionObrasSocialesPage from '../features/obrasSociales/pages/GestionObrasSocialesPage'
+import AdminDashboardPage from '../features/admin/pages/AdminDashboardPage'
+import AdminHorariosPage from '../features/admin/pages/AdminHorariosPage'
+import GestionSecretariasPage from '../features/admin/pages/GestionSecretariasPage'
 
-// TODO: reemplazar placeholders por páginas reales al avanzar en cada fase
-const Placeholder = ({ titulo }) => (
-  <PageWrapper>
-    <div className="flex items-center justify-center h-64 text-navy/40 text-xl">
-      {titulo} — próximamente
-    </div>
-  </PageWrapper>
-)
 
 export default function AppRouter() {
   return (
@@ -31,12 +37,18 @@ export default function AppRouter() {
 
         <Route path="/" element={<Navigate to={ROUTES.LOGIN} replace />} />
 
+        {/* Perfil — todos los roles autenticados */}
+        <Route element={<PrivateRoute roles={TODOS_LOS_ROLES} />}>
+          <Route path={ROUTES.PERFIL} element={<PerfilPage />} />
+        </Route>
+
         {/* Paciente */}
         <Route element={<PrivateRoute roles={[ROLES.PACIENTE]} />}>
+          <Route path={ROUTES.HOME} element={<PacienteHomePage />} />
           <Route path={ROUTES.MIS_TURNOS} element={<MisTurnosPage />} />
           <Route path={ROUTES.SOLICITAR_TURNO} element={<SolicitarTurnoPage />} />
-          <Route path={ROUTES.PERFIL} element={<Placeholder titulo="Perfil" />} />
-          <Route path={ROUTES.HISTORIAL} element={<Placeholder titulo="Historial" />} />
+          <Route path={ROUTES.DEPENDIENTES} element={<DependientesPage />} />
+          <Route path={ROUTES.HISTORIAL} element={<HistorialPage />} />
         </Route>
 
         {/* Doctor */}
@@ -46,15 +58,19 @@ export default function AppRouter() {
 
         {/* Secretaria + Admin — gestión */}
         <Route element={<PrivateRoute roles={[ROLES.SECRETARIA, ROLES.ADMIN]} />}>
-          <Route path={ROUTES.TURNOS_PENDIENTES} element={<Placeholder titulo="Turnos Pendientes" />} />
-          <Route path={ROUTES.GESTION_TURNOS} element={<Placeholder titulo="Gestión de Turnos" />} />
-          <Route path={ROUTES.GESTION_MEDICOS} element={<Placeholder titulo="Gestión de Médicos" />} />
-          <Route path={ROUTES.GESTION_PACIENTES} element={<Placeholder titulo="Gestión de Pacientes" />} />
+          <Route path={ROUTES.TURNOS_PENDIENTES} element={<GestionPendientesPage />} />
+          <Route path={ROUTES.GESTION_TURNOS} element={<GestionTurnosPage />} />
+          <Route path={ROUTES.GESTION_MEDICOS} element={<GestionMedicosPage />} />
+          <Route path={ROUTES.GESTION_PACIENTES} element={<GestionPacientesPage />} />
+          <Route path={ROUTES.GESTION_OBRAS_SOCIALES} element={<GestionObrasSocialesPage />} />
+          <Route path={ROUTES.GESTION_ESPECIALIDADES} element={<GestionEspecialidadesPage />} />
         </Route>
 
         {/* Solo Admin */}
         <Route element={<PrivateRoute roles={[ROLES.ADMIN]} />}>
-          <Route path={ROUTES.ADMIN_DASHBOARD} element={<Placeholder titulo="Dashboard Admin" />} />
+          <Route path={ROUTES.ADMIN_DASHBOARD} element={<AdminDashboardPage />} />
+          <Route path={ROUTES.ADMIN_HORARIOS} element={<AdminHorariosPage />} />
+          <Route path={ROUTES.ADMIN_USUARIOS} element={<GestionSecretariasPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
