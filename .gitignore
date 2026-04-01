@@ -24,6 +24,7 @@ dist-ssr
 .env.production
 .env.production.local
 *.local
+.claude
 
 # Editor directories and files
 .vscode/*

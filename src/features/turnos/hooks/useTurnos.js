@@ -113,8 +113,10 @@ export function useHistorial() {
     setLoading(true)
     setError(null)
     try {
-      const { data } = await turnosService.getMisTurnos('Completado')
-      setTurnos(Array.isArray(data) ? data : (data?.items ?? data?.data ?? []))
+      const { data } = await turnosService.getMisTurnos()
+      const todos = Array.isArray(data) ? data : (data?.items ?? data?.data ?? [])
+      const ESTADOS_HISTORIAL = ['Completado', 'Cancelado', 'Ausente', 'Rechazado']
+      setTurnos(todos.filter(t => ESTADOS_HISTORIAL.includes(t.estado)))
     } catch (err) {
       setError(err.response?.data?.mensaje || 'Error al cargar el historial')
     } finally {
