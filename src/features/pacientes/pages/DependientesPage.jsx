@@ -4,7 +4,9 @@ import PageWrapper from '../../../components/layout/PageWrapper'
 import { useDependientes } from '../hooks/usePacientes'
 import { validate, rules } from '../../../utils/validators'
 
-const EMPTY_FORM = { nombre: '', apellido: '', dni: '', fechaNacimiento: '' }
+const EMPTY_FORM = {
+  nombre: '', apellido: '', dni: '', fechaNacimiento: '', telefono: '',
+}
 
 const SCHEMA = {
   nombre:          [rules.required('Ingresá el nombre')],
@@ -43,11 +45,11 @@ function DependienteCard({ dep }) {
   )
 }
 
-function FormField({ label, error, children }) {
+function FormField({ label, error, children, required = true }) {
   return (
     <div>
       <label className="block text-[11px] font-bold text-deep/40 uppercase tracking-widest mb-2">
-        {label} <span className="text-red-400">*</span>
+        {label} {required && <span className="text-red-400">*</span>}
       </label>
       {children}
       {error && <p className="text-red-500 text-xs mt-1.5">{error}</p>}
@@ -81,11 +83,17 @@ export default function DependientesPage() {
         apellido: form.apellido.trim(),
         dni: form.dni.trim(),
         fechaNacimiento: form.fechaNacimiento,
+        ...(form.telefono && { telefono: form.telefono.trim() }),
       })
       setForm(EMPTY_FORM)
       setShowForm(false)
     } catch (err) {
-      setSaveError(err.response?.data?.mensaje || 'No se pudo registrar el dependiente')
+      const d = err.response?.data
+      setSaveError(
+        d?.message || d?.detail ||
+        (d?.errors && Object.values(d.errors).flat()[0]) ||
+        'No se pudo registrar el familiar'
+      )
     } finally {
       setSaving(false)
     }
@@ -101,7 +109,7 @@ export default function DependientesPage() {
       <div className="w-full max-w-lg mx-auto">
       <div className="mb-6 flex items-start justify-between">
         <div>
-          <h1 className="text-deep font-black text-2xl md:text-3xl tracking-tight">Mis dependientes</h1>
+          <h1 className="text-deep font-black text-2xl md:text-3xl tracking-tight">Mis familiares</h1>
           <p className="text-deep/50 text-sm mt-1">
             Personas a tu cargo que gestionás vos sus turnos
           </p>
@@ -131,7 +139,7 @@ export default function DependientesPage() {
               onSubmit={handleSubmit}
               className="bg-white rounded-2xl p-4 md:p-6 border border-deep/5 shadow-sm space-y-4"
             >
-              <h2 className="text-deep font-bold text-base">Nuevo dependiente</h2>
+              <h2 className="text-deep font-bold text-base">Nuevo familiar</h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField label="Nombre" error={errors.nombre}>
@@ -142,13 +150,26 @@ export default function DependientesPage() {
                 </FormField>
               </div>
 
-              <FormField label="DNI" error={errors.dni}>
-                <input value={form.dni} onChange={set('dni')} placeholder="12345678" maxLength={8} className={inputClass('dni')} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormField label="DNI" error={errors.dni}>
+                  <input value={form.dni} onChange={set('dni')} placeholder="12345678" maxLength={8} className={inputClass('dni')} />
+                </FormField>
+                <FormField label="Fecha de nacimiento" error={errors.fechaNacimiento}>
+                  <input type="date" value={form.fechaNacimiento} onChange={set('fechaNacimiento')} className={inputClass('fechaNacimiento')} />
+                </FormField>
+              </div>
+
+              <FormField label="Teléfono" error={errors.telefono} required={false}>
+                <input
+                  value={form.telefono}
+                  onChange={set('telefono')}
+                  placeholder="1112345678"
+                  maxLength={20}
+                  className={inputClass('telefono')}
+                />
               </FormField>
 
-              <FormField label="Fecha de nacimiento" error={errors.fechaNacimiento}>
-                <input type="date" value={form.fechaNacimiento} onChange={set('fechaNacimiento')} className={inputClass('fechaNacimiento')} />
-              </FormField>
+
 
               {saveError && (
                 <p className="text-red-500 text-xs bg-red-50 border border-red-100 rounded-xl px-4 py-2.5">
@@ -192,7 +213,7 @@ export default function DependientesPage() {
             <svg className="w-10 h-10 mx-auto mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0" />
             </svg>
-            <p className="text-sm">Todavía no tenés dependientes registrados</p>
+            <p className="text-sm">Todavía no tenés familiares registrados</p>
           </div>
         )}
 

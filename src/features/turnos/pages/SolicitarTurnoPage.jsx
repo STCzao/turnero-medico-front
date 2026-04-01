@@ -7,7 +7,9 @@ import { useTurnoActions } from '../hooks/useTurnos'
 import { ROUTES } from '../../../router/routes'
 import { useEspecialidades } from '../../especialidades/hooks/useEspecialidades'
 import { validate, rules } from '../../../utils/validators'
-import { useMyProfile } from '../../pacientes/hooks/usePacientes'
+import { useMyProfile, useDependientes } from '../../pacientes/hooks/usePacientes'
+import { useObrasSociales } from '../../obrasSociales/hooks/useObrasSociales'
+
 const PASOS = ['Especialidad', 'Detalles', 'Confirmar']
 
 function StepIndicator({ paso }) {
@@ -48,13 +50,17 @@ export default function SolicitarTurnoPage() {
     especialidadNombre: '',
     motivo: '',
     doctorId: '',
+    obraSocialId: '',
+    numeroAfiliadoDeclarado: '',
+    planAfiliadoDeclarado: '',
   })
   const [errors, setErrors] = useState({})
 
   const { perfil } = useMyProfile()
+  const { dependientes } = useDependientes()
+  const { items: obrasSociales } = useObrasSociales({ pageSize: 100 })
 
   const { especialidades, loading: loadingEsp } = useEspecialidades()
-
   const { medicos, loading: loadingMedicos } = useMedicosByEspecialidad(form.especialidadId)
   const { crear, loading, error: submitError } = useTurnoActions(() => {
     navigate(ROUTES.MIS_TURNOS, { state: { turnoSolicitado: true } })
@@ -75,10 +81,13 @@ export default function SolicitarTurnoPage() {
 
   const handleSubmit = async () => {
     const payload = {
-      pacienteId: perfil?.id,
+      pacienteId: form.paraMi ? perfil?.id : Number(form.dependienteId),
       especialidadId: Number(form.especialidadId),
       motivo: form.motivo.trim(),
       ...(form.doctorId && { doctorId: Number(form.doctorId) }),
+      ...(form.obraSocialId && { obraSocialId: Number(form.obraSocialId) }),
+      ...(form.numeroAfiliadoDeclarado && { numeroAfiliadoDeclarado: form.numeroAfiliadoDeclarado.trim() }),
+      ...(form.planAfiliadoDeclarado && { planAfiliadoDeclarado: form.planAfiliadoDeclarado.trim() }),
     }
     try {
       await crear(payload)
@@ -114,6 +123,40 @@ export default function SolicitarTurnoPage() {
               <motion.div key="paso0" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }}>
                 <h2 className="text-deep font-bold text-lg mb-1">¿Qué especialidad necesitás?</h2>
                 <p className="text-deep/40 text-sm mb-5">Seleccioná la especialidad médica más adecuada a tu consulta</p>
+
+                {/* Selector de beneficiario */}
+                {dependientes.length > 0 && (
+                  <div className="mb-6">
+                    <p className="text-[11px] font-bold text-deep/40 uppercase tracking-widest mb-2">¿Para quién es el turno?</p>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setForm(f => ({ ...f, paraMi: true, dependienteId: '', dependienteNombre: '' }))}
+                        className={`text-sm font-semibold px-4 py-2 rounded-full border transition-all ${
+                          form.paraMi
+                            ? 'bg-deep text-mint border-deep'
+                            : 'bg-deep/5 text-deep/55 border-transparent hover:bg-deep/10 hover:text-deep'
+                        }`}
+                      >
+                        Para mí
+                      </button>
+                      {dependientes.map((dep) => (
+                        <button
+                          key={dep.id}
+                          type="button"
+                          onClick={() => setForm(f => ({ ...f, paraMi: false, dependienteId: dep.id, dependienteNombre: `${dep.nombre} ${dep.apellido}` }))}
+                          className={`text-sm font-semibold px-4 py-2 rounded-full border transition-all ${
+                            !form.paraMi && form.dependienteId === dep.id
+                              ? 'bg-deep text-mint border-deep'
+                              : 'bg-deep/5 text-deep/55 border-transparent hover:bg-deep/10 hover:text-deep'
+                          }`}
+                        >
+                          {dep.nombre} {dep.apellido}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {loadingEsp ? (
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -171,7 +214,7 @@ export default function SolicitarTurnoPage() {
                 </div>
 
                 {/* Doctor (opcional) */}
-                <div>
+                <div className="mb-6">
                   <label className="block text-[11px] font-bold text-deep/40 uppercase tracking-widest mb-2">
                     Preferencia de médico <span className="text-deep/25 normal-case font-normal tracking-normal">(opcional)</span>
                   </label>
@@ -194,6 +237,52 @@ export default function SolicitarTurnoPage() {
                     </select>
                   )}
                 </div>
+
+                {/* Cobertura médica */}
+                <div className="border-t border-deep/5 pt-5 space-y-4">
+                  <p className="text-[11px] font-bold text-deep/40 uppercase tracking-widest">
+                    Cobertura médica <span className="normal-case font-normal tracking-normal">(opcional)</span>
+                  </p>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-deep/40 uppercase tracking-widest mb-2">Obra social</label>
+                    <select
+                      value={form.obraSocialId}
+                      onChange={(e) => setForm(f => ({ ...f, obraSocialId: e.target.value }))}
+                      className="w-full bg-deep/5 border border-transparent focus:border-teal rounded-xl px-4 py-3 text-deep text-sm focus:outline-none transition-all appearance-none"
+                    >
+                      <option value="">Particular / Sin obra social</option>
+                      {obrasSociales.map((os) => (
+                        <option key={os.id} value={os.id}>{os.nombre}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {form.obraSocialId && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[11px] font-bold text-deep/40 uppercase tracking-widest mb-2">N° de afiliado</label>
+                        <input
+                          value={form.numeroAfiliadoDeclarado}
+                          onChange={(e) => setForm(f => ({ ...f, numeroAfiliadoDeclarado: e.target.value }))}
+                          placeholder="00000000"
+                          maxLength={30}
+                          className="w-full bg-deep/5 border border-transparent focus:border-teal rounded-xl px-4 py-3 text-deep text-sm placeholder-deep/25 focus:outline-none transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold text-deep/40 uppercase tracking-widest mb-2">Plan</label>
+                        <input
+                          value={form.planAfiliadoDeclarado}
+                          onChange={(e) => setForm(f => ({ ...f, planAfiliadoDeclarado: e.target.value }))}
+                          placeholder="Plan 310"
+                          maxLength={50}
+                          className="w-full bg-deep/5 border border-transparent focus:border-teal rounded-xl px-4 py-3 text-deep text-sm placeholder-deep/25 focus:outline-none transition-all"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
               </motion.div>
             )}
 
@@ -204,6 +293,9 @@ export default function SolicitarTurnoPage() {
                 <p className="text-deep/40 text-sm mb-5">Confirmá los datos antes de enviar</p>
 
                 <div className="space-y-3 mb-6">
+                  {dependientes.length > 0 && (
+                    <Row label="Para" value={form.paraMi ? 'Vos' : form.dependienteNombre} />
+                  )}
                   <Row label="Especialidad" value={form.especialidadNombre} />
                   <Row label="Motivo de consulta" value={form.motivo} />
                   <Row
@@ -214,6 +306,20 @@ export default function SolicitarTurnoPage() {
                         : 'Sin preferencia'
                     }
                   />
+                  <Row
+                    label="Obra social"
+                    value={
+                      form.obraSocialId
+                        ? (() => { const os = obrasSociales.find(x => String(x.id) === String(form.obraSocialId)); return os?.nombre ?? '—' })()
+                        : 'Particular / Sin obra social'
+                    }
+                  />
+                  {form.obraSocialId && form.numeroAfiliadoDeclarado && (
+                    <Row label="N° de afiliado" value={form.numeroAfiliadoDeclarado} />
+                  )}
+                  {form.obraSocialId && form.planAfiliadoDeclarado && (
+                    <Row label="Plan" value={form.planAfiliadoDeclarado} />
+                  )}
                 </div>
 
                 {submitError && (
