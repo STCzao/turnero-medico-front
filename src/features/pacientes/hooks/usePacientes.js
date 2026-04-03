@@ -78,5 +78,16 @@ export function useDependientes() {
     return data
   }, [fetch])
 
-  return { dependientes, loading, error, crearDependiente, refetch: fetch }
+  const actualizarDependiente = useCallback(async (id, formData) => {
+    const { data } = await pacientesService.actualizarDependiente(id, { id, ...formData })
+    await fetch()
+    return data
+  }, [fetch])
+
+  const eliminarDependiente = useCallback(async (id) => {
+    await pacientesService.eliminarDependiente(id)
+    await fetch()
+  }, [fetch])
+
+  return { dependientes, loading, error, crearDependiente, actualizarDependiente, eliminarDependiente, refetch: fetch }
 }

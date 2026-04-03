@@ -13,6 +13,7 @@ const FILTROS = [
   { label: 'Confirmados', value: ESTADO_TURNO.CONFIRMADO },
   { label: 'Completados', value: ESTADO_TURNO.COMPLETADO },
   { label: 'Cancelados',  value: ESTADO_TURNO.CANCELADO },
+  { label: 'Rechazados',  value: ESTADO_TURNO.RECHAZADO },
 ]
 
 export default function MisTurnosPage() {

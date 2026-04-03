@@ -60,11 +60,11 @@ export default function AdminHorariosPage() {
     setSaving(true)
     try {
       await horariosService.crear({
-        doctorId:         Number(doctorId),
-        diaSemana:        Number(form.diaSemana),
-        horaInicio:       form.horaInicio,
-        horaFin:          form.horaFin,
-        duracionMinutos:   Number(form.intervaloMinutos),
+        doctorId:        Number(doctorId),
+        diaSemana:       Number(form.diaSemana),
+        horaInicio:      form.horaInicio + ':00',
+        horaFin:         form.horaFin + ':00',
+        duracionMinutos: Number(form.intervaloMinutos),
       })
       await fetchHorarios()
       setModalAgregar(false)

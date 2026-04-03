@@ -10,7 +10,9 @@
       "Bash(python -c \"import sys,json; [print\\(x[''''name'''']\\) for x in json.load\\(sys.stdin\\)]\")",
       "Bash(find 'd:\\\\Programacion\\\\Practica\\\\Full Stack\\\\turnero-medico\\\\turnero-medico-front' -type f -name *.env*)",
       "Bash(grep -r api. 'd:\\\\Programacion\\\\Practica\\\\Full Stack\\\\turnero-medico\\\\turnero-medico-front/src' --include=*.js)",
-      "Bash(grep -r \"fetch\\\\|axios\\\\|http\" 'd:\\\\Programacion\\\\Practica\\\\Full Stack\\\\turnero-medico\\\\turnero-medico-front/src' --include=*.js)"
+      "Bash(grep -r \"fetch\\\\|axios\\\\|http\" 'd:\\\\Programacion\\\\Practica\\\\Full Stack\\\\turnero-medico\\\\turnero-medico-front/src' --include=*.js)",
+      "Bash(xargs grep:*)",
+      "Bash(xargs cat:*)"
     ]
   }
 }
