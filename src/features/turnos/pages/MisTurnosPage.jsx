@@ -19,7 +19,7 @@ const FILTROS = [
 export default function MisTurnosPage() {
   const [filtro, setFiltro] = useState(undefined)
   const { turnos, loading, error, refetch } = useMisTurnos(filtro)
-  const { cancelar, loading: cancelLoading } = useTurnoActions(refetch)
+  const { cancelar, loading: cancelLoading, error: cancelError } = useTurnoActions(refetch)
 
   const handleCancel = (id) => cancelar(id, { motivo: 'Cancelado por el paciente' })
 
@@ -95,7 +95,10 @@ export default function MisTurnosPage() {
           </Link>
         </motion.div>
       )}
-
+      {/* Error cancelación */}
+      {cancelError && (
+        <p className="text-red-500 text-sm text-center mb-4">{cancelError}</p>
+      )}
       {/* Lista */}
       {!loading && !error && turnos.length > 0 && (
         <motion.div layout className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">

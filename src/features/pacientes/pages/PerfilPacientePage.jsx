@@ -5,13 +5,14 @@ import PageWrapper from '../../../components/layout/PageWrapper'
 import { useMyProfile } from '../hooks/usePacientes'
 import { ROUTES } from '../../../router/routes'
 import useAuthStore from '../../../store/authSlice'
-import { validate, rules } from '../../../utils/validators'
+import { validate, rules, NOMBRE_RULES } from '../../../utils/validators'
 import { ConfirmModal } from '../../../components/ui/Modal'
 
 const SCHEMA_EDIT = {
-  nombre:   [rules.required('Ingresá el nombre')],
-  apellido: [rules.required('Ingresá el apellido')],
-  email:    [rules.required('Ingresá el email')],
+  nombre:          NOMBRE_RULES,
+  apellido:        NOMBRE_RULES,
+  telefono:        [rules.required('El teléfono es obligatorio'), rules.telefono()],
+  fechaNacimiento: [rules.required('La fecha de nacimiento es obligatoria'), rules.minAge(18, 'Debés tener al menos 18 años')],
 }
 
 function InfoRow({ label, value }) {

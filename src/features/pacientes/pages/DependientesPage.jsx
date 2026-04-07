@@ -36,6 +36,7 @@ function FormField({ label, error, children, required = true }) {
 function DependienteCard({ dep, onEdit, onDelete }) {
   const [confirmando, setConfirmando] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState(null)
 
   const edad = dep.fechaNacimiento
     ? Math.floor((Date.now() - new Date(dep.fechaNacimiento)) / 31557600000)
@@ -43,11 +44,13 @@ function DependienteCard({ dep, onEdit, onDelete }) {
 
   const handleDelete = async () => {
     setDeleting(true)
+    setDeleteError(null)
     try {
       await onDelete(dep.id)
+    } catch (err) {
+      setDeleteError(err.response?.data?.mensaje || 'No se pudo eliminar al familiar')
     } finally {
       setDeleting(false)
-      setConfirmando(false)
     }
   }
 
@@ -105,6 +108,7 @@ function DependienteCard({ dep, onEdit, onDelete }) {
           >
             <div className="flex items-center gap-3 flex-wrap pt-3 mt-3 border-t border-deep/5">
               <span className="text-xs text-deep/55 flex-1">¿Eliminar a {dep.nombre}?</span>
+              {deleteError && <p className="text-red-500 text-xs w-full">{deleteError}</p>}
               <button
                 onClick={handleDelete}
                 disabled={deleting}
@@ -113,7 +117,7 @@ function DependienteCard({ dep, onEdit, onDelete }) {
                 {deleting ? 'Eliminando...' : 'Sí, eliminar'}
               </button>
               <button
-                onClick={() => setConfirmando(false)}
+                onClick={() => { setConfirmando(false); setDeleteError(null) }}
                 className="text-xs text-deep/45 hover:text-deep/70 font-medium transition-colors"
               >
                 Cancelar
