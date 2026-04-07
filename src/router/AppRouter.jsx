@@ -72,6 +72,9 @@ export default function AppRouter() {
           <Route path={ROUTES.ADMIN_HORARIOS} element={<AdminHorariosPage />} />
           <Route path={ROUTES.ADMIN_USUARIOS} element={<GestionSecretariasPage />} />
         </Route>
+
+        {/* 404 — redirige a login, PublicRoute redirige al home si ya está autenticado */}
+        <Route path="*" element={<Navigate to={ROUTES.LOGIN} replace />} />
       </Routes>
     </BrowserRouter>
   )

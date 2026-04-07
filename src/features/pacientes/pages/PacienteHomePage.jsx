@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PageWrapper from '../../../components/layout/PageWrapper'
 import { useMisTurnos } from '../../turnos/hooks/useTurnos'
-import { useMyProfile } from '../hooks/usePacientes'
 import { ROUTES } from '../../../router/routes'
 import useAuthStore from '../../../store/authSlice'
 import { ESTADO_TURNO } from '../../../constants/estadosTurno'
@@ -76,7 +75,6 @@ function ProximoTurno({ turnos }) {
 export default function PacienteHomePage() {
   const nombre = useAuthStore(s => s.user?.nombre)
   const { turnos, loading } = useMisTurnos()
-  const { perfil } = useMyProfile()
 
   return (
     <PageWrapper>
@@ -92,29 +90,6 @@ export default function PacienteHomePage() {
           <div className="h-20 bg-deep/5 rounded-2xl animate-pulse" />
         ) : (
           <ProximoTurno turnos={turnos} />
-        )}
-
-        {/* Banner cobertura */}
-        {perfil && !perfil.obraSocialId && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }}>
-            <Link
-              to={ROUTES.PERFIL}
-              className="flex items-center gap-4 bg-amber-50 border border-amber-200/60 rounded-2xl p-4 active:scale-[0.99] transition-transform"
-            >
-              <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
-                <svg className="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-amber-800 font-bold text-sm">Completá tu cobertura médica</p>
-                <p className="text-amber-600/70 text-xs mt-0.5">Agregá tu obra social para agilizar tus solicitudes</p>
-              </div>
-              <svg className="w-4 h-4 text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </motion.div>
         )}
 
         {/* Atajos */}
