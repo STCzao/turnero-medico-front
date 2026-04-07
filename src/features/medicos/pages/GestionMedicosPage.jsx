@@ -8,17 +8,24 @@ import { useMedicos } from '../hooks/useMedicos'
 import { medicosService } from '../services/medicosService'
 import { authService } from '../../auth/services/authService'
 import { useEspecialidades } from '../../especialidades/hooks/useEspecialidades'
-import { validate, rules, NOMBRE_RULES, PASSWORD_RULES } from '../../../utils/validators'
+import { validate, rules, NOMBRE_RULES, PASSWORD_RULES, EMAIL_RULES } from '../../../utils/validators'
 import Pagination from '../../../components/ui/Pagination'
 
 const PAGE_SIZE = 15
 const FORM_INICIAL = { nombre: '', apellido: '', dni: '', email: '', password: '', matricula: '', telefono: '', especialidadId: '' }
-const MEDICO_BASE_SCHEMA = {
+const MEDICO_CREAR_SCHEMA = {
   nombre:         NOMBRE_RULES,
   apellido:       NOMBRE_RULES,
   dni:            [rules.required('El DNI es obligatorio'), rules.dni()],
-  email:          [rules.required(), rules.email()],
+  email:          EMAIL_RULES,
   matricula:      [rules.required('La matrícula es obligatoria'), rules.minLength(5, 'Mínimo 5 caracteres'), rules.maxLength(15, 'Máximo 15 caracteres'), rules.pattern(/^[A-Za-z0-9]+$/, 'Solo letras y números, sin espacios ni guiones')],
+  telefono:       [rules.required(), rules.telefono()],
+  especialidadId: [rules.required('Seleccioná una especialidad')],
+  password:       PASSWORD_RULES,
+}
+const MEDICO_EDITAR_SCHEMA = {
+  nombre:         NOMBRE_RULES,
+  apellido:       NOMBRE_RULES,
   telefono:       [rules.required(), rules.telefono()],
   especialidadId: [rules.required('Seleccioná una especialidad')],
 }
@@ -36,6 +43,7 @@ export default function GestionMedicosPage() {
   const [formError, setFormError] = useState(null)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState(null)
 
   const openCrear = () => {
     setForm(FORM_INICIAL)
@@ -61,9 +69,7 @@ export default function GestionMedicosPage() {
   const closeModal = () => setModal(null)
 
   const handleSubmit = async () => {
-    const schema = modal.mode === 'crear'
-      ? { ...MEDICO_BASE_SCHEMA, password: PASSWORD_RULES }
-      : MEDICO_BASE_SCHEMA
+    const schema = modal.mode === 'crear' ? MEDICO_CREAR_SCHEMA : MEDICO_EDITAR_SCHEMA
     const errors = validate(schema, form)
     if (Object.keys(errors).length) {
       setFormError(Object.values(errors)[0])
@@ -87,8 +93,6 @@ export default function GestionMedicosPage() {
           id: modal.item.id,
           nombre: form.nombre.trim(),
           apellido: form.apellido.trim(),
-          email: form.email.trim(),
-          matricula: form.matricula.trim(),
           telefono: form.telefono.trim(),
           especialidadId: Number(form.especialidadId),
         })
@@ -104,12 +108,13 @@ export default function GestionMedicosPage() {
 
   const handleDelete = async () => {
     setDeleting(true)
+    setDeleteError(null)
     try {
       await medicosService.eliminar(confirmDelete.id)
       await refetch()
       setConfirmDelete(null)
-    } catch {
-      // silencioso
+    } catch (err) {
+      setDeleteError(err.response?.data?.mensaje || 'No se pudo eliminar al médico')
     } finally {
       setDeleting(false)
     }
@@ -259,6 +264,7 @@ export default function GestionMedicosPage() {
             onChange={e => { setForm(f => ({ ...f, email: e.target.value })); setFormError(null) }}
             placeholder="Ej: doctor@clinica.com"
             required
+            disabled={modal?.mode === 'editar'}
           />
 
           {modal?.mode === 'crear' && (
@@ -322,10 +328,10 @@ export default function GestionMedicosPage() {
       {/* Confirm eliminar */}
       <ConfirmModal
         isOpen={!!confirmDelete}
-        onClose={() => setConfirmDelete(null)}
+        onClose={() => { setConfirmDelete(null); setDeleteError(null) }}
         onConfirm={handleDelete}
         title="Eliminar médico"
-        message={`¿Eliminar al Dr. ${confirmDelete?.nombre} ${confirmDelete?.apellido}? Esta acción no se puede deshacer.`}
+        message={deleteError ?? `¿Eliminar al Dr. ${confirmDelete?.nombre} ${confirmDelete?.apellido}? Esta acción no se puede deshacer.`}
         confirmLabel="Eliminar"
         variant="danger"
         loading={deleting}

@@ -8,6 +8,18 @@ import { useObrasSociales } from '../hooks/useObrasSociales'
 import { obrasSocialesService } from '../services/obrasSocialesService'
 import Pagination from '../../../components/ui/Pagination'
 import { useEspecialidades } from '../../especialidades/hooks/useEspecialidades'
+import { validate, rules } from '../../../utils/validators'
+
+const OS_SCHEMA = {
+  nombre: [
+    rules.required('El nombre es obligatorio'),
+    rules.minLength(2, 'Mínimo 2 caracteres'),
+    rules.maxLength(100, 'Máximo 100 caracteres'),
+  ],
+  observaciones: [
+    rules.maxLength(1000, 'Las observaciones no pueden exceder 1000 caracteres'),
+  ],
+}
 
 const PAGE_SIZE = 15
 const FORM_INICIAL = { nombre: '', especialidadIds: [], planes: [], observaciones: '' }
@@ -24,6 +36,7 @@ export default function GestionObrasSocialesPage() {
   const [formError, setFormError] = useState(null)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState(null)
 
   const openCrear = () => {
     setForm(FORM_INICIAL)
@@ -55,13 +68,13 @@ export default function GestionObrasSocialesPage() {
   }
 
   const handleSubmit = async () => {
-    const nombre = form.nombre.trim()
-    if (!nombre) { setFormError('El nombre es obligatorio'); return }
+    const errors = validate(OS_SCHEMA, form)
+    if (Object.keys(errors).length) { setFormError(Object.values(errors)[0]); return }
     if (form.especialidadIds.length === 0) { setFormError('Seleccioná al menos una especialidad'); return }
     setSaving(true)
     try {
       const payload = {
-        nombre,
+        nombre: form.nombre.trim(),
         especialidadIds: form.especialidadIds,
         planes: form.planes,
         observaciones: form.observaciones.trim(),
@@ -82,12 +95,13 @@ export default function GestionObrasSocialesPage() {
 
   const handleDelete = async () => {
     setDeleting(true)
+    setDeleteError(null)
     try {
       await obrasSocialesService.eliminar(confirmDelete.id)
       await refetch()
       setConfirmDelete(null)
-    } catch {
-      // el backend puede rechazar si hay pacientes asociados
+    } catch (err) {
+      setDeleteError(err.response?.data?.mensaje || 'No se pudo eliminar la obra social')
     } finally {
       setDeleting(false)
     }
@@ -255,10 +269,10 @@ export default function GestionObrasSocialesPage() {
       {/* Confirm eliminar */}
       <ConfirmModal
         isOpen={!!confirmDelete}
-        onClose={() => setConfirmDelete(null)}
+        onClose={() => { setConfirmDelete(null); setDeleteError(null) }}
         onConfirm={handleDelete}
         title="Eliminar obra social"
-        message={`¿Eliminar "${confirmDelete?.nombre}"? Esta acción no se puede deshacer.`}
+        message={deleteError ?? `¿Eliminar "${confirmDelete?.nombre}"? Esta acción no se puede deshacer.`}
         confirmLabel="Eliminar"
         variant="danger"
         loading={deleting}

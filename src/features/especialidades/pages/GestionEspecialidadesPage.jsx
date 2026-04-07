@@ -6,6 +6,16 @@ import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
 import { useEspecialidades } from '../hooks/useEspecialidades'
 import { especialidadesService } from '../services/especialidadesService'
+import { validate, rules } from '../../../utils/validators'
+
+const ESPECIALIDAD_SCHEMA = {
+  nombre: [
+    rules.required('El nombre es obligatorio'),
+    rules.minLength(3, 'Mínimo 3 caracteres'),
+    rules.maxLength(50, 'Máximo 50 caracteres'),
+    rules.pattern(/^[A-Za-záéíóúÁÉÍÓÚñÑ\s]+$/, 'Solo letras y espacios'),
+  ],
+}
 
 export default function GestionEspecialidadesPage() {
   const { especialidades, loading, error, refetch } = useEspecialidades()
@@ -32,14 +42,14 @@ export default function GestionEspecialidadesPage() {
   const closeModal = () => setModal(null)
 
   const handleSubmit = async () => {
-    const nombre = form.nombre.trim()
-    if (!nombre) { setFormError('El nombre es obligatorio'); return }
+    const errors = validate(ESPECIALIDAD_SCHEMA, form)
+    if (Object.keys(errors).length) { setFormError(Object.values(errors)[0]); return }
     setSaving(true)
     try {
       if (modal.mode === 'crear') {
-        await especialidadesService.crear({ nombre })
+        await especialidadesService.crear({ nombre: form.nombre.trim() })
       } else {
-        await especialidadesService.actualizar(modal.item.id, { nombre })
+        await especialidadesService.actualizar(modal.item.id, { nombre: form.nombre.trim() })
       }
       await refetch()
       closeModal()

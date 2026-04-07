@@ -27,6 +27,15 @@ export const rules = {
 
   telefono: (msg = 'Teléfono inválido') =>
     (v) => !TELEFONO_RE.test(v) ? msg : null,
+
+  minAge: (years, msg) =>
+    (v) => {
+      if (!v) return null
+      const birth = new Date(v)
+      const limit = new Date()
+      limit.setFullYear(limit.getFullYear() - years)
+      return birth <= limit ? null : (msg ?? `Debés tener al menos ${years} años`)
+    },
 }
 
 export const NOMBRE_RULES = [
@@ -39,9 +48,16 @@ export const NOMBRE_RULES = [
 export const PASSWORD_RULES = [
   rules.required('La contraseña es obligatoria'),
   rules.minLength(8, 'La contraseña debe tener al menos 8 caracteres'),
+  rules.maxLength(100, 'La contraseña no puede exceder 100 caracteres'),
   rules.pattern(/[A-Z]/, 'Debe incluir al menos una letra mayúscula'),
   rules.pattern(/[a-z]/, 'Debe incluir al menos una letra minúscula'),
   rules.pattern(/\d/, 'Debe incluir al menos un número'),
+]
+
+export const EMAIL_RULES = [
+  rules.required(),
+  rules.email(),
+  rules.maxLength(100, 'El email no puede exceder 100 caracteres'),
 ]
 
 /**

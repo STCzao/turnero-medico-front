@@ -7,7 +7,7 @@ import Input from '../../../components/ui/Input'
 import { useSecretarias } from '../../secretarias/hooks/useSecretarias'
 import { secretariasService } from '../../secretarias/services/secretariasService'
 import { authService } from '../../auth/services/authService'
-import { validate, rules, NOMBRE_RULES, PASSWORD_RULES } from '../../../utils/validators'
+import { validate, rules, NOMBRE_RULES, PASSWORD_RULES, EMAIL_RULES } from '../../../utils/validators'
 import Pagination from '../../../components/ui/Pagination'
 
 const PAGE_SIZE = 15
@@ -16,14 +16,13 @@ const SEC_CREAR_SCHEMA = {
   nombre:   NOMBRE_RULES,
   apellido: NOMBRE_RULES,
   dni:      [rules.required('El DNI es obligatorio'), rules.dni()],
-  email:    [rules.required(), rules.email()],
+  email:    EMAIL_RULES,
   telefono: [rules.required(), rules.telefono()],
   password: PASSWORD_RULES,
 }
 const SEC_EDITAR_SCHEMA = {
   nombre:   NOMBRE_RULES,
   apellido: NOMBRE_RULES,
-  email:    [rules.required(), rules.email()],
   telefono: [rules.required(), rules.telefono()],
 }
 
@@ -39,6 +38,7 @@ export default function GestionSecretariasPage() {
   const [formError, setFormError] = useState(null)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState(null)
 
   const openCrear = () => {
     setForm(FORM_CREAR_INICIAL)
@@ -100,7 +100,6 @@ export default function GestionSecretariasPage() {
           id: modal.item.id,
           nombre: form.nombre.trim(),
           apellido: form.apellido.trim(),
-          email: form.email.trim(),
           telefono: form.telefono.trim(),
         })
         await refetch()
@@ -115,12 +114,13 @@ export default function GestionSecretariasPage() {
 
   const handleDelete = async () => {
     setDeleting(true)
+    setDeleteError(null)
     try {
       await secretariasService.eliminar(confirmDelete.id)
       await refetch()
       setConfirmDelete(null)
-    } catch {
-      // silencioso
+    } catch (err) {
+      setDeleteError(err.response?.data?.mensaje || 'No se pudo eliminar a la secretaria')
     } finally {
       setDeleting(false)
     }
@@ -344,9 +344,7 @@ export default function GestionSecretariasPage() {
             id="email"
             type="email"
             value={form.email}
-            onChange={handleChange('email')}
-            placeholder="Ej: secretaria@clinica.com"
-            required
+            disabled
           />
           <Input
             label="Teléfono"
@@ -362,10 +360,10 @@ export default function GestionSecretariasPage() {
       {/* Confirm eliminar */}
       <ConfirmModal
         isOpen={!!confirmDelete}
-        onClose={() => setConfirmDelete(null)}
+        onClose={() => { setConfirmDelete(null); setDeleteError(null) }}
         onConfirm={handleDelete}
         title="Eliminar secretaria"
-        message={`¿Eliminar a ${confirmDelete?.nombre} ${confirmDelete?.apellido}? Esta acción no se puede deshacer.`}
+        message={deleteError ?? `¿Eliminar a ${confirmDelete?.nombre} ${confirmDelete?.apellido}? Esta acción no se puede deshacer.`}
         confirmLabel="Eliminar"
         variant="danger"
         loading={deleting}

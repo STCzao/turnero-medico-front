@@ -64,9 +64,8 @@ export default function PerfilPacientePage() {
       await update({
         nombre:          editForm.nombre.trim(),
         apellido:        editForm.apellido.trim(),
-        email:           editForm.email.trim(),
-        telefono:        editForm.telefono.trim() || perfil.telefono || '',
-        fechaNacimiento: editForm.fechaNacimiento || perfil.fechaNacimiento?.split('T')[0] || '',
+        telefono:        editForm.telefono.trim(),
+        fechaNacimiento: editForm.fechaNacimiento,
       })
       setEditing(false)
     } catch (err) {
@@ -144,17 +143,18 @@ export default function PerfilPacientePage() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-deep/35 uppercase tracking-widest mb-1.5">Email <span className="text-red-400">*</span></label>
-                  <input type="email" value={editForm.email} onChange={set('email')} className={inputCls('email')} placeholder="Email" />
-                  {editErrors.email && <p className="text-red-500 text-xs mt-1">{editErrors.email}</p>}
+                  <label className="block text-[11px] font-bold text-deep/35 uppercase tracking-widest mb-1.5">Email</label>
+                  <input type="email" value={editForm.email} disabled className={inputCls('email')} />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-deep/35 uppercase tracking-widest mb-1.5">Teléfono</label>
+                  <label className="block text-[11px] font-bold text-deep/35 uppercase tracking-widest mb-1.5">Teléfono <span className="text-red-400">*</span></label>
                   <input value={editForm.telefono} onChange={set('telefono')} className={inputCls('telefono')} placeholder="Ej: 011 1234-5678" />
+                  {editErrors.telefono && <p className="text-red-500 text-xs mt-1">{editErrors.telefono}</p>}
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-deep/35 uppercase tracking-widest mb-1.5">Fecha de nacimiento</label>
+                  <label className="block text-[11px] font-bold text-deep/35 uppercase tracking-widest mb-1.5">Fecha de nacimiento <span className="text-red-400">*</span></label>
                   <input type="date" value={editForm.fechaNacimiento} onChange={set('fechaNacimiento')} className={inputCls('fechaNacimiento')} />
+                  {editErrors.fechaNacimiento && <p className="text-red-500 text-xs mt-1">{editErrors.fechaNacimiento}</p>}
                 </div>
                 {saveError && <p className="text-red-500 text-xs bg-red-50 border border-red-100 rounded-xl px-4 py-2.5">{saveError}</p>}
                 <div className="flex gap-3 pt-1">
