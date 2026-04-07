@@ -26,6 +26,7 @@ export default function GestionEspecialidadesPage() {
   const [formError, setFormError] = useState(null)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState(null)
 
   const openCrear = () => {
     setForm({ nombre: '' })
@@ -62,12 +63,13 @@ export default function GestionEspecialidadesPage() {
 
   const handleDelete = async () => {
     setDeleting(true)
+    setDeleteError(null)
     try {
       await especialidadesService.eliminar(confirmDelete.id)
       await refetch()
       setConfirmDelete(null)
-    } catch {
-      // el backend puede rechazar si hay médicos asociados
+    } catch (err) {
+      setDeleteError(err.response?.data?.mensaje || 'No se pudo eliminar la especialidad')
     } finally {
       setDeleting(false)
     }
@@ -180,10 +182,10 @@ export default function GestionEspecialidadesPage() {
       {/* Confirm eliminar */}
       <ConfirmModal
         isOpen={!!confirmDelete}
-        onClose={() => setConfirmDelete(null)}
+        onClose={() => { setConfirmDelete(null); setDeleteError(null) }}
         onConfirm={handleDelete}
         title="Eliminar especialidad"
-        message={`¿Eliminar "${confirmDelete?.nombre}"? Esta acción no se puede deshacer.`}
+        message={deleteError ?? `¿Eliminar "${confirmDelete?.nombre}"? Esta acción no se puede deshacer.`}
         confirmLabel="Eliminar"
         variant="danger"
         loading={deleting}

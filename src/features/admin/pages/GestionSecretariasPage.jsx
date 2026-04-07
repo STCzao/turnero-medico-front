@@ -84,7 +84,7 @@ export default function GestionSecretariasPage() {
         await refetch()
         closeModal()
       } catch (err) {
-        setFormError(err.response?.data?.message || err.response?.data?.mensaje || 'Error al guardar')
+        setFormError(err.response?.data?.mensaje || err.response?.data?.message || 'Error al guardar')
       } finally {
         setSaving(false)
       }
@@ -105,7 +105,7 @@ export default function GestionSecretariasPage() {
         await refetch()
         closeModal()
       } catch (err) {
-        setFormError(err.response?.data?.message || err.response?.data?.mensaje || 'Error al guardar')
+        setFormError(err.response?.data?.mensaje || err.response?.data?.message || 'Error al guardar')
       } finally {
         setSaving(false)
       }

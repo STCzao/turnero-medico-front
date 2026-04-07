@@ -6,7 +6,7 @@ import { useTurnoActions } from '../hooks/useTurnos'
 export default function ModalRechazar({ turno, isOpen, onClose, onSuccess }) {
   const [motivo, setMotivo] = useState('')
   const [error, setError] = useState(null)
-  const { rechazar, loading } = useTurnoActions(onSuccess)
+  const { rechazar, loading, error: submitError } = useTurnoActions(onSuccess)
 
   const handleClose = () => {
     setMotivo('')
@@ -27,7 +27,7 @@ export default function ModalRechazar({ turno, isOpen, onClose, onSuccess }) {
       await rechazar(turno.id, { motivoRechazo: motivo.trim() })
       handleClose()
     } catch {
-      // el error ya lo maneja useTurnoActions
+      // submitError se muestra en el JSX
     }
   }
 
@@ -77,6 +77,7 @@ export default function ModalRechazar({ turno, isOpen, onClose, onSuccess }) {
             }`}
           />
           {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+          {submitError && <p className="text-red-500 text-xs mt-1">{submitError}</p>}
         </div>
       </div>
     </Modal>

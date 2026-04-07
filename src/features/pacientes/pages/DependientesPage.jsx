@@ -213,7 +213,7 @@ export default function DependientesPage() {
     } catch (err) {
       const d = err.response?.data
       setEditError(
-        d?.message || d?.detail ||
+        d?.mensaje || d?.message || d?.detail ||
         (d?.errors && Object.values(d.errors).flat()[0]) ||
         'No se pudo actualizar el familiar'
       )
