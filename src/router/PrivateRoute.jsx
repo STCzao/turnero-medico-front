@@ -1,5 +1,6 @@
 import { Navigate, Outlet } from 'react-router-dom'
 import { ROUTES } from './routes'
+import { getHomeByRol } from './redirect'
 import useAuthStore from '../store/authSlice'
 
 /**
@@ -14,7 +15,7 @@ export default function PrivateRoute({ roles }) {
   }
 
   if (roles && roles.length > 0 && !roles.includes(user?.rol)) {
-    return <Navigate to={ROUTES.LOGIN} replace />
+    return <Navigate to={getHomeByRol(user?.rol)} replace />
   }
 
   return <Outlet />

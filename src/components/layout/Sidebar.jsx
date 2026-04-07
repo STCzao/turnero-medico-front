@@ -96,7 +96,7 @@ export default function Sidebar() {
         <div className="flex-1">
           {sections.map(({ section, links }) => (
             <div key={section} className="mb-6 px-4">
-              <p className="text-[10px] font-bold text-mint/30 uppercase tracking-widest mb-2 px-2">{section}</p>
+              <p className="text-[10px] font-bold text-white/25 uppercase tracking-widest mb-2 px-2">{section}</p>
               {links.map(({ label, to, icon }) => (
                 <NavLink
                   key={to}
@@ -106,7 +106,7 @@ export default function Sidebar() {
                     `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors mb-0.5 ${
                       isActive
                         ? 'bg-white/15 text-white'
-                        : 'text-mint/70 hover:bg-white/8 hover:text-mint'
+                        : 'text-white/60 hover:bg-white/8 hover:text-white'
                     }`
                   }
                 >
@@ -126,14 +126,14 @@ export default function Sidebar() {
             </div>
             <div className="min-w-0">
               <p className="text-white text-xs font-semibold truncate leading-tight">{user?.nombre}</p>
-              <p className="text-mint/35 text-[10px] truncate leading-tight">{user?.email}</p>
+              <p className="text-white/35 text-[10px] truncate leading-tight">{user?.email}</p>
             </div>
           </div>
           <NavLink
             to={ROUTES.PERFIL}
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors mb-0.5 ${
-                isActive ? 'bg-white/15 text-white' : 'text-mint/70 hover:bg-white/8 hover:text-mint'
+                isActive ? 'bg-white/15 text-white' : 'text-white/60 hover:bg-white/8 hover:text-white'
               }`
             }
           >

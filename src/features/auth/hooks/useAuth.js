@@ -13,7 +13,7 @@ export function useAuth() {
     setError(null)
     try {
       const { data } = await authService.login({ email, password })
-      storeLogin(data.token)
+      storeLogin(data.token, data.refreshToken)
       return data
     } catch (err) {
       const msg = err.response?.data?.message || 'Credenciales incorrectas'

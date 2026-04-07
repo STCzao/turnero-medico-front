@@ -48,7 +48,6 @@ function FInput({ id, label, type = 'text', placeholder, value, onChange, error 
 export default function LoginForm() {
   const { login, loading, error } = useAuth()
   const navigate = useNavigate()
-  const getUser = () => useAuthStore.getState().user
 
   const [form, setForm] = useState({ email: '', password: '' })
   const [fieldErrors, setFieldErrors] = useState({})
@@ -64,8 +63,9 @@ export default function LoginForm() {
     if (Object.keys(errors).length) { setFieldErrors(errors); return }
     try {
       await login(form)
-      // El rol se obtiene del store (decodificado del JWT), no del body de la respuesta
-      navigate(getHomeByRol(getUser()?.rol), { replace: true })
+      // Leemos getState() post-await: el store ya fue actualizado por login()
+      const rol = useAuthStore.getState().user?.rol
+      navigate(getHomeByRol(rol), { replace: true })
     } catch { /* manejo en hook */ }
   }
 

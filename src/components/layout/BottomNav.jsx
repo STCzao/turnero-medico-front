@@ -105,7 +105,7 @@ export default function BottomNav() {
             `flex-1 flex flex-col items-center justify-center gap-1 py-2 text-[10px] font-semibold tracking-wide transition-colors ${
               highlight
                 ? isActive ? 'text-mint' : 'text-sky'
-                : isActive ? 'text-white' : 'text-mint/40'
+                : isActive ? 'text-white' : 'text-white/50'
             }`
           }
         >

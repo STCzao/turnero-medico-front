@@ -29,6 +29,21 @@ export const rules = {
     (v) => !TELEFONO_RE.test(v) ? msg : null,
 }
 
+export const NOMBRE_RULES = [
+  rules.required(),
+  rules.minLength(2),
+  rules.maxLength(50),
+  rules.pattern(/^[A-Za-záéíóúÁÉÍÓÚñÑ\s]+$/, 'Solo letras y espacios'),
+]
+
+export const PASSWORD_RULES = [
+  rules.required('La contraseña es obligatoria'),
+  rules.minLength(8, 'La contraseña debe tener al menos 8 caracteres'),
+  rules.pattern(/[A-Z]/, 'Debe incluir al menos una letra mayúscula'),
+  rules.pattern(/[a-z]/, 'Debe incluir al menos una letra minúscula'),
+  rules.pattern(/\d/, 'Debe incluir al menos un número'),
+]
+
 /**
  * @param {Record<string, Function[]>} schema  - { campo: [regla1, regla2, ...] }
  * @param {Record<string, string>}     form    - valores del formulario

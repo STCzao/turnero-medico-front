@@ -7,9 +7,25 @@ import Input from '../../../components/ui/Input'
 import { useSecretarias } from '../../secretarias/hooks/useSecretarias'
 import { secretariasService } from '../../secretarias/services/secretariasService'
 import { authService } from '../../auth/services/authService'
+import { validate, rules, NOMBRE_RULES, PASSWORD_RULES } from '../../../utils/validators'
+import Pagination from '../../../components/ui/Pagination'
 
 const PAGE_SIZE = 15
-const FORM_INICIAL = { nombre: '', apellido: '', email: '', password: '' }
+const FORM_CREAR_INICIAL = { nombre: '', apellido: '', dni: '', email: '', telefono: '', password: '' }
+const SEC_CREAR_SCHEMA = {
+  nombre:   NOMBRE_RULES,
+  apellido: NOMBRE_RULES,
+  dni:      [rules.required('El DNI es obligatorio'), rules.dni()],
+  email:    [rules.required(), rules.email()],
+  telefono: [rules.required(), rules.telefono()],
+  password: PASSWORD_RULES,
+}
+const SEC_EDITAR_SCHEMA = {
+  nombre:   NOMBRE_RULES,
+  apellido: NOMBRE_RULES,
+  email:    [rules.required(), rules.email()],
+  telefono: [rules.required(), rules.telefono()],
+}
 
 export default function GestionSecretariasPage() {
   const [page, setPage] = useState(1)
@@ -17,15 +33,15 @@ export default function GestionSecretariasPage() {
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE)
 
-  const [modal, setModal] = useState(null)       // null | { mode: 'crear' | 'editar', item?: obj }
+  const [modal, setModal] = useState(null) // null | { mode: 'crear' | 'editar', item?: obj }
   const [confirmDelete, setConfirmDelete] = useState(null)
-  const [form, setForm] = useState(FORM_INICIAL)
+  const [form, setForm] = useState(FORM_CREAR_INICIAL)
   const [formError, setFormError] = useState(null)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
   const openCrear = () => {
-    setForm(FORM_INICIAL)
+    setForm(FORM_CREAR_INICIAL)
     setFormError(null)
     setModal({ mode: 'crear' })
   }
@@ -35,7 +51,7 @@ export default function GestionSecretariasPage() {
       nombre: sec.nombre ?? '',
       apellido: sec.apellido ?? '',
       email: sec.email ?? '',
-      password: '',
+      telefono: sec.telefono ?? '',
     })
     setFormError(null)
     setModal({ mode: 'editar', item: sec })
@@ -43,52 +59,57 @@ export default function GestionSecretariasPage() {
 
   const closeModal = () => setModal(null)
 
+  const handleChange = (field) => (e) => {
+    setForm(f => ({ ...f, [field]: e.target.value }))
+    setFormError(null)
+  }
+
   const handleSubmit = async () => {
-    if (!form.nombre.trim() || !form.apellido.trim() || !form.email.trim()) {
-      setFormError('Nombre, apellido y email son obligatorios')
-      return
-    }
     if (modal.mode === 'crear') {
-      if (!form.password || form.password.length < 8) {
-        setFormError('La contraseña debe tener al menos 8 caracteres')
+      const errors = validate(SEC_CREAR_SCHEMA, form)
+      if (Object.keys(errors).length) {
+        setFormError(Object.values(errors)[0])
         return
       }
-      if (!/[A-Z]/.test(form.password)) {
-        setFormError('La contraseña debe incluir al menos una letra mayúscula')
-        return
-      }
-      if (!/[a-z]/.test(form.password)) {
-        setFormError('La contraseña debe incluir al menos una letra minúscula')
-        return
-      }
-      if (!/\d/.test(form.password)) {
-        setFormError('La contraseña debe incluir al menos un número')
-        return
-      }
-    }
-    setSaving(true)
-    try {
-      if (modal.mode === 'crear') {
+      setSaving(true)
+      try {
         await authService.registerSecretaria({
           nombre: form.nombre.trim(),
           apellido: form.apellido.trim(),
+          dni: form.dni.trim(),
           email: form.email.trim(),
+          telefono: form.telefono.trim(),
           password: form.password,
         })
-      } else {
+        await refetch()
+        closeModal()
+      } catch (err) {
+        setFormError(err.response?.data?.message || err.response?.data?.mensaje || 'Error al guardar')
+      } finally {
+        setSaving(false)
+      }
+    } else if (modal.mode === 'editar') {
+      const errors = validate(SEC_EDITAR_SCHEMA, form)
+      if (Object.keys(errors).length) {
+        setFormError(Object.values(errors)[0])
+        return
+      }
+      setSaving(true)
+      try {
         await secretariasService.actualizar(modal.item.id, {
           id: modal.item.id,
           nombre: form.nombre.trim(),
           apellido: form.apellido.trim(),
           email: form.email.trim(),
+          telefono: form.telefono.trim(),
         })
+        await refetch()
+        closeModal()
+      } catch (err) {
+        setFormError(err.response?.data?.message || err.response?.data?.mensaje || 'Error al guardar')
+      } finally {
+        setSaving(false)
       }
-      await refetch()
-      closeModal()
-    } catch (err) {
-      setFormError(err.response?.data?.message || err.response?.data?.mensaje || 'Error al guardar')
-    } finally {
-      setSaving(false)
     }
   }
 
@@ -150,9 +171,10 @@ export default function GestionSecretariasPage() {
           </p>
 
           <div className="bg-white rounded-2xl border border-deep/5 shadow-sm overflow-hidden">
-            <div className="hidden md:grid md:grid-cols-[1.5fr_1.5fr_auto] gap-4 px-5 py-3 border-b border-deep/5 bg-deep/[0.02]">
+            <div className="hidden md:grid md:grid-cols-[1.5fr_1fr_1fr_auto] gap-4 px-5 py-3 border-b border-deep/5 bg-deep/[0.02]">
               <span className="text-[10px] font-bold text-deep/40 uppercase tracking-widest">Nombre</span>
               <span className="text-[10px] font-bold text-deep/40 uppercase tracking-widest">Email</span>
+              <span className="text-[10px] font-bold text-deep/40 uppercase tracking-widest">Teléfono</span>
               <span />
             </div>
 
@@ -163,22 +185,28 @@ export default function GestionSecretariasPage() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className={`px-5 py-4 flex flex-col md:grid md:grid-cols-[1.5fr_1.5fr_auto] md:items-center gap-1 md:gap-4 ${
+                  className={`px-5 py-3.5 flex items-center gap-3 md:grid md:grid-cols-[1.5fr_1fr_1fr_auto] md:gap-4 ${
                     idx < items.length - 1 ? 'border-b border-deep/5' : ''
                   }`}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
                     <div className="w-8 h-8 rounded-full bg-sky/20 flex items-center justify-center shrink-0">
                       <span className="text-navy text-xs font-bold">
                         {sec.nombre?.[0]}{sec.apellido?.[0]}
                       </span>
                     </div>
-                    <p className="text-sm font-semibold text-deep">
-                      {sec.nombre} {sec.apellido}
-                    </p>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-deep truncate">
+                        {sec.nombre} {sec.apellido}
+                      </p>
+                      <p className="text-xs text-deep/40">DNI {sec.dni ?? '—'}</p>
+                    </div>
                   </div>
-                  <p className="text-sm text-deep/50 truncate">{sec.email ?? '—'}</p>
-                  <div className="flex gap-2 shrink-0 self-start md:self-auto">
+
+                  <p className="hidden md:block text-sm text-deep/50 truncate">{sec.email ?? '—'}</p>
+                  <p className="hidden md:block text-sm text-deep/50">{sec.telefono || '—'}</p>
+
+                  <div className="flex gap-2 shrink-0">
                     <button
                       onClick={() => openEditar(sec)}
                       className="text-xs font-medium text-deep/50 hover:text-deep transition-colors px-2 py-1 rounded-lg hover:bg-deep/5"
@@ -198,49 +226,15 @@ export default function GestionSecretariasPage() {
           </div>
 
           {/* Paginación */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-6">
-              <button
-                onClick={() => setPage(p => p - 1)}
-                disabled={page === 1}
-                className="w-9 h-9 rounded-xl border border-deep/10 flex items-center justify-center text-deep/50 hover:text-deep hover:border-deep/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
-                <button
-                  key={n}
-                  onClick={() => setPage(n)}
-                  className={`w-9 h-9 rounded-xl text-sm font-semibold transition-colors ${
-                    n === page
-                      ? 'bg-deep text-mint'
-                      : 'border border-deep/10 text-deep/50 hover:text-deep hover:border-deep/30'
-                  }`}
-                >
-                  {n}
-                </button>
-              ))}
-              <button
-                onClick={() => setPage(p => p + 1)}
-                disabled={page === totalPages}
-                className="w-9 h-9 rounded-xl border border-deep/10 flex items-center justify-center text-deep/50 hover:text-deep hover:border-deep/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
-          )}
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
         </>
       )}
 
-      {/* Modal crear / editar */}
+      {/* Modal crear */}
       <Modal
-        isOpen={!!modal}
+        isOpen={modal?.mode === 'crear'}
         onClose={closeModal}
-        title={modal?.mode === 'crear' ? 'Nueva secretaria' : 'Editar secretaria'}
+        title="Nueva secretaria"
         size="sm"
         footer={
           <>
@@ -255,7 +249,7 @@ export default function GestionSecretariasPage() {
               label="Nombre"
               id="nombre"
               value={form.nombre}
-              onChange={e => { setForm(f => ({ ...f, nombre: e.target.value })); setFormError(null) }}
+              onChange={handleChange('nombre')}
               placeholder="Ej: María"
               required
             />
@@ -263,33 +257,104 @@ export default function GestionSecretariasPage() {
               label="Apellido"
               id="apellido"
               value={form.apellido}
-              onChange={e => { setForm(f => ({ ...f, apellido: e.target.value })); setFormError(null) }}
+              onChange={handleChange('apellido')}
               placeholder="Ej: López"
               required
             />
           </div>
-
           <Input
             label="Email"
             id="email"
             type="email"
             value={form.email}
-            onChange={e => { setForm(f => ({ ...f, email: e.target.value })); setFormError(null) }}
+            onChange={handleChange('email')}
             placeholder="Ej: secretaria@clinica.com"
             required
           />
-
-          {modal?.mode === 'crear' && (
+          <Input
+            label="Contraseña inicial"
+            id="password"
+            type="password"
+            value={form.password}
+            onChange={handleChange('password')}
+            placeholder="Mínimo 8 caracteres, mayúscula y número"
+            required
+          />
+          <div className="grid grid-cols-2 gap-3">
             <Input
-              label="Contraseña inicial"
-              id="password"
-              type="password"
-              value={form.password}
-              onChange={e => { setForm(f => ({ ...f, password: e.target.value })); setFormError(null) }}
-              placeholder="Mínimo 8 caracteres, mayúscula y número"
+              label="DNI"
+              id="dni"
+              value={form.dni}
+              onChange={handleChange('dni')}
+              placeholder="Ej: 32456789"
+              required
             />
-          )}
+            <Input
+              label="Teléfono"
+              id="telefono"
+              value={form.telefono}
+              onChange={handleChange('telefono')}
+              placeholder="Ej: 11-1234-5678"
+            />
+          </div>
+          {formError && <p className="text-xs text-red-500">{formError}</p>}
+        </div>
+      </Modal>
 
+      {/* Modal editar */}
+      <Modal
+        isOpen={modal?.mode === 'editar'}
+        onClose={closeModal}
+        title="Editar secretaria"
+        size="sm"
+        footer={
+          <>
+            <Button variant="secondary" onClick={closeModal} disabled={saving}>Cancelar</Button>
+            <Button onClick={handleSubmit} loading={saving}>Guardar</Button>
+          </>
+        }
+      >
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              label="Nombre"
+              id="nombre"
+              value={form.nombre}
+              onChange={handleChange('nombre')}
+              placeholder="Ej: María"
+              required
+            />
+            <Input
+              label="Apellido"
+              id="apellido"
+              value={form.apellido}
+              onChange={handleChange('apellido')}
+              placeholder="Ej: López"
+              required
+            />
+          </div>
+          <Input
+            label="DNI"
+            id="dni-readonly"
+            value={modal?.item?.dni ?? ''}
+            disabled
+          />
+          <Input
+            label="Email"
+            id="email"
+            type="email"
+            value={form.email}
+            onChange={handleChange('email')}
+            placeholder="Ej: secretaria@clinica.com"
+            required
+          />
+          <Input
+            label="Teléfono"
+            id="telefono"
+            value={form.telefono}
+            onChange={handleChange('telefono')}
+            placeholder="Ej: 11-1234-5678"
+          />
           {formError && <p className="text-xs text-red-500">{formError}</p>}
         </div>
       </Modal>

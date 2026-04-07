@@ -175,7 +175,7 @@ export default function DependientesPage() {
     } catch (err) {
       const d = err.response?.data
       setSaveError(
-        d?.message || d?.detail ||
+        d?.mensaje || d?.message || d?.detail ||
         (d?.errors && Object.values(d.errors).flat()[0]) ||
         'No se pudo registrar el familiar'
       )
