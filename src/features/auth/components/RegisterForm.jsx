@@ -3,16 +3,16 @@ import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../hooks/useAuth'
 import { ROUTES } from '../../../router/routes'
-import { validate, rules } from '../../../utils/validators'
+import { validate, rules, NOMBRE_RULES, EMAIL_RULES, PASSWORD_RULES } from '../../../utils/validators'
 
 const REGISTER_SCHEMA = {
-  nombre:          [rules.required(), rules.minLength(2)],
-  apellido:        [rules.required(), rules.minLength(2)],
-  email:           [rules.required(), rules.email()],
-  password:        [rules.required(), rules.minLength(8, 'Mínimo 8 caracteres')],
+  nombre:          NOMBRE_RULES,
+  apellido:        NOMBRE_RULES,
+  email:           EMAIL_RULES,
+  password:        PASSWORD_RULES,
   dni:             [rules.required(), rules.dni()],
   telefono:        [rules.required(), rules.telefono()],
-  fechaNacimiento: [rules.required('Fecha de nacimiento obligatoria')],
+  fechaNacimiento: [rules.required('Fecha de nacimiento obligatoria'), rules.minAge(18, 'Debés tener al menos 18 años')],
 }
 
 const INITIAL = {

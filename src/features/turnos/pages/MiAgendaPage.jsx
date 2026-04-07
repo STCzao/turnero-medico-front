@@ -119,7 +119,7 @@ export default function MiAgendaPage() {
   }
 
   const { turnos, loading, error, refetch } = useAgendaDoctor(fecha)
-  const { actualizar, loading: actionLoading } = useTurnoActions(refetch)
+  const { actualizar, loading: actionLoading, error: actionError } = useTurnoActions(refetch)
 
   const handleAction = (id, estado) => {
     actualizar(id, { id, estado: estado === 'completado' ? ESTADO_TURNO.COMPLETADO : ESTADO_TURNO.AUSENTE })
@@ -148,12 +148,17 @@ export default function MiAgendaPage() {
         </div>
       )}
 
-      {/* Error */}
+      {/* Error carga */}
       {error && !loading && (
         <div className="text-center py-16">
           <p className="text-red-500 text-sm">{error}</p>
           <button onClick={refetch} className="mt-3 text-xs text-deep/50 hover:text-deep underline">Reintentar</button>
         </div>
+      )}
+
+      {/* Error acción (completar/ausente) */}
+      {actionError && (
+        <p className="text-red-500 text-sm text-center mb-4">{actionError}</p>
       )}
 
       {/* Vacío */}

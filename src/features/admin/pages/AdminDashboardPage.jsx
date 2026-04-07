@@ -48,6 +48,7 @@ function NavCard({ to, title, description, icon }) {
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [statsError, setStatsError] = useState(null)
 
   useEffect(() => {
     Promise.all([
@@ -64,6 +65,7 @@ export default function AdminDashboardPage() {
           totalPacientes:   pacientes.data.total,
         })
       })
+      .catch(() => setStatsError('No se pudieron cargar las estadísticas'))
       .finally(() => setLoading(false))
   }, [])
 
@@ -76,6 +78,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Stats */}
+      {statsError && <p className="text-red-500 text-sm mb-4">{statsError}</p>}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
         <StatCard label="Pendientes" value={stats?.turnosPendientes} loading={loading} color="amber" />
         <StatCard label="Total turnos" value={stats?.totalTurnos} loading={loading} color="sky" />

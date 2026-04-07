@@ -6,7 +6,20 @@ import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
 import { useObrasSociales } from '../hooks/useObrasSociales'
 import { obrasSocialesService } from '../services/obrasSocialesService'
+import Pagination from '../../../components/ui/Pagination'
 import { useEspecialidades } from '../../especialidades/hooks/useEspecialidades'
+import { validate, rules } from '../../../utils/validators'
+
+const OS_SCHEMA = {
+  nombre: [
+    rules.required('El nombre es obligatorio'),
+    rules.minLength(2, 'Mínimo 2 caracteres'),
+    rules.maxLength(100, 'Máximo 100 caracteres'),
+  ],
+  observaciones: [
+    rules.maxLength(1000, 'Las observaciones no pueden exceder 1000 caracteres'),
+  ],
+}
 
 const PAGE_SIZE = 15
 const FORM_INICIAL = { nombre: '', especialidadIds: [], planes: [], observaciones: '' }
@@ -23,6 +36,7 @@ export default function GestionObrasSocialesPage() {
   const [formError, setFormError] = useState(null)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState(null)
 
   const openCrear = () => {
     setForm(FORM_INICIAL)
@@ -54,13 +68,13 @@ export default function GestionObrasSocialesPage() {
   }
 
   const handleSubmit = async () => {
-    const nombre = form.nombre.trim()
-    if (!nombre) { setFormError('El nombre es obligatorio'); return }
+    const errors = validate(OS_SCHEMA, form)
+    if (Object.keys(errors).length) { setFormError(Object.values(errors)[0]); return }
     if (form.especialidadIds.length === 0) { setFormError('Seleccioná al menos una especialidad'); return }
     setSaving(true)
     try {
       const payload = {
-        nombre,
+        nombre: form.nombre.trim(),
         especialidadIds: form.especialidadIds,
         planes: form.planes,
         observaciones: form.observaciones.trim(),
@@ -81,12 +95,13 @@ export default function GestionObrasSocialesPage() {
 
   const handleDelete = async () => {
     setDeleting(true)
+    setDeleteError(null)
     try {
       await obrasSocialesService.eliminar(confirmDelete.id)
       await refetch()
       setConfirmDelete(null)
-    } catch {
-      // el backend puede rechazar si hay pacientes asociados
+    } catch (err) {
+      setDeleteError(err.response?.data?.mensaje || 'No se pudo eliminar la obra social')
     } finally {
       setDeleting(false)
     }
@@ -151,15 +166,20 @@ export default function GestionObrasSocialesPage() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className={`px-5 py-4 flex flex-col md:grid md:grid-cols-[2fr_1fr_auto] md:items-center gap-1 md:gap-4 ${
+                  className={`px-5 py-3.5 flex items-center gap-3 md:grid md:grid-cols-[2fr_1fr_auto] md:gap-4 ${
                     idx < items.length - 1 ? 'border-b border-deep/5' : ''
                   }`}
                 >
-                  <p className="text-sm font-semibold text-deep">{os.nombre}</p>
-                  <p className="text-xs text-deep/50">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-deep truncate">{os.nombre}</p>
+                    <p className="text-xs text-deep/40 truncate md:hidden">
+                      {os.especialidades?.map(e => e.nombre).join(', ') || '—'}
+                    </p>
+                  </div>
+                  <p className="hidden md:block text-xs text-deep/50">
                     {os.especialidades?.map(e => e.nombre).join(', ') || '—'}
                   </p>
-                  <div className="flex gap-2 shrink-0 self-start md:self-auto">
+                  <div className="flex gap-2 shrink-0">
                     <button
                       onClick={() => openEditar(os)}
                       className="text-xs font-medium text-deep/50 hover:text-deep transition-colors px-2 py-1 rounded-lg hover:bg-deep/5"
@@ -179,41 +199,7 @@ export default function GestionObrasSocialesPage() {
           </div>
 
           {/* Paginación */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-6">
-              <button
-                onClick={() => setPage(p => p - 1)}
-                disabled={page === 1}
-                className="w-9 h-9 rounded-xl border border-deep/10 flex items-center justify-center text-deep/50 hover:text-deep hover:border-deep/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
-                <button
-                  key={n}
-                  onClick={() => setPage(n)}
-                  className={`w-9 h-9 rounded-xl text-sm font-semibold transition-colors ${
-                    n === page
-                      ? 'bg-deep text-mint'
-                      : 'border border-deep/10 text-deep/50 hover:text-deep hover:border-deep/30'
-                  }`}
-                >
-                  {n}
-                </button>
-              ))}
-              <button
-                onClick={() => setPage(p => p + 1)}
-                disabled={page === totalPages}
-                className="w-9 h-9 rounded-xl border border-deep/10 flex items-center justify-center text-deep/50 hover:text-deep hover:border-deep/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
-          )}
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
         </>
       )}
 
@@ -283,10 +269,10 @@ export default function GestionObrasSocialesPage() {
       {/* Confirm eliminar */}
       <ConfirmModal
         isOpen={!!confirmDelete}
-        onClose={() => setConfirmDelete(null)}
+        onClose={() => { setConfirmDelete(null); setDeleteError(null) }}
         onConfirm={handleDelete}
         title="Eliminar obra social"
-        message={`¿Eliminar "${confirmDelete?.nombre}"? Esta acción no se puede deshacer.`}
+        message={deleteError ?? `¿Eliminar "${confirmDelete?.nombre}"? Esta acción no se puede deshacer.`}
         confirmLabel="Eliminar"
         variant="danger"
         loading={deleting}

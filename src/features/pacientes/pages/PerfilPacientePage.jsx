@@ -3,16 +3,16 @@ import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PageWrapper from '../../../components/layout/PageWrapper'
 import { useMyProfile } from '../hooks/usePacientes'
-import { useObrasSociales } from '../../obrasSociales/hooks/useObrasSociales'
 import { ROUTES } from '../../../router/routes'
 import useAuthStore from '../../../store/authSlice'
-import { validate, rules } from '../../../utils/validators'
+import { validate, rules, NOMBRE_RULES } from '../../../utils/validators'
 import { ConfirmModal } from '../../../components/ui/Modal'
 
 const SCHEMA_EDIT = {
-  nombre:   [rules.required('Ingresá el nombre')],
-  apellido: [rules.required('Ingresá el apellido')],
-  email:    [rules.required('Ingresá el email')],
+  nombre:          NOMBRE_RULES,
+  apellido:        NOMBRE_RULES,
+  telefono:        [rules.required('El teléfono es obligatorio'), rules.telefono()],
+  fechaNacimiento: [rules.required('La fecha de nacimiento es obligatoria'), rules.minAge(18, 'Debés tener al menos 18 años')],
 }
 
 function InfoRow({ label, value }) {
@@ -27,7 +27,6 @@ function InfoRow({ label, value }) {
 
 export default function PerfilPacientePage() {
   const { perfil, loading, error, update } = useMyProfile()
-  const { items: obrasSociales } = useObrasSociales({ pageSize: 100 })
   const { logout } = useAuthStore()
   const navigate = useNavigate()
   const [editing, setEditing] = useState(false)
@@ -46,9 +45,6 @@ export default function PerfilPacientePage() {
       email:                   perfil.email ?? '',
       telefono:                perfil.telefono ?? '',
       fechaNacimiento:         perfil.fechaNacimiento ? perfil.fechaNacimiento.split('T')[0] : '',
-      obraSocialId:            perfil.obraSocialId ?? '',
-      numeroAfiliado:          perfil.numeroAfiliado ?? '',
-      planAfiliado:            perfil.planAfiliado ?? '',
     })
     setEditErrors({})
     setSaveError(null)
@@ -69,12 +65,8 @@ export default function PerfilPacientePage() {
       await update({
         nombre:          editForm.nombre.trim(),
         apellido:        editForm.apellido.trim(),
-        email:           editForm.email.trim(),
-        telefono:        editForm.telefono.trim() || perfil.telefono || '',
-        fechaNacimiento: editForm.fechaNacimiento || perfil.fechaNacimiento?.split('T')[0] || '',
-        obraSocialId:    editForm.obraSocialId ? Number(editForm.obraSocialId) : null,
-        numeroAfiliado:  editForm.obraSocialId ? editForm.numeroAfiliado.trim() : '',
-        planAfiliado:    editForm.obraSocialId ? editForm.planAfiliado.trim() : '',
+        telefono:        editForm.telefono.trim(),
+        fechaNacimiento: editForm.fechaNacimiento,
       })
       setEditing(false)
     } catch (err) {
@@ -136,14 +128,6 @@ export default function PerfilPacientePage() {
                   label="Fecha de nacimiento"
                   value={perfil.fechaNacimiento ? new Date(perfil.fechaNacimiento).toLocaleDateString('es-AR') : null}
                 />
-                <InfoRow
-                  label="Obra social"
-                  value={perfil.obraSocialId
-                    ? (obrasSociales.find(os => os.id === perfil.obraSocialId)?.nombre ?? 'Cargando...')
-                    : 'Particular / Sin obra social'}
-                />
-                {perfil.obraSocialId && <InfoRow label="N° de afiliado" value={perfil.numeroAfiliado} />}
-                {perfil.obraSocialId && <InfoRow label="Plan" value={perfil.planAfiliado} />}
               </>
             ) : (
               <div className="space-y-3 mt-2">
@@ -160,45 +144,18 @@ export default function PerfilPacientePage() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-deep/35 uppercase tracking-widest mb-1.5">Email <span className="text-red-400">*</span></label>
-                  <input type="email" value={editForm.email} onChange={set('email')} className={inputCls('email')} placeholder="Email" />
-                  {editErrors.email && <p className="text-red-500 text-xs mt-1">{editErrors.email}</p>}
+                  <label className="block text-[11px] font-bold text-deep/35 uppercase tracking-widest mb-1.5">Email</label>
+                  <input type="email" value={editForm.email} disabled className={inputCls('email')} />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-deep/35 uppercase tracking-widest mb-1.5">Teléfono</label>
+                  <label className="block text-[11px] font-bold text-deep/35 uppercase tracking-widest mb-1.5">Teléfono <span className="text-red-400">*</span></label>
                   <input value={editForm.telefono} onChange={set('telefono')} className={inputCls('telefono')} placeholder="Ej: 011 1234-5678" />
+                  {editErrors.telefono && <p className="text-red-500 text-xs mt-1">{editErrors.telefono}</p>}
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-deep/35 uppercase tracking-widest mb-1.5">Fecha de nacimiento</label>
+                  <label className="block text-[11px] font-bold text-deep/35 uppercase tracking-widest mb-1.5">Fecha de nacimiento <span className="text-red-400">*</span></label>
                   <input type="date" value={editForm.fechaNacimiento} onChange={set('fechaNacimiento')} className={inputCls('fechaNacimiento')} />
-                </div>
-                <div className="border-t border-deep/5 pt-3 space-y-3">
-                  <p className="text-[11px] font-bold text-deep/35 uppercase tracking-widest">Cobertura médica</p>
-                  <div>
-                    <label className="block text-[11px] font-bold text-deep/35 uppercase tracking-widest mb-1.5">Obra social</label>
-                    <select
-                      value={editForm.obraSocialId}
-                      onChange={set('obraSocialId')}
-                      className={inputCls('obraSocialId')}
-                    >
-                      <option value="">Particular / Sin obra social</option>
-                      {obrasSociales.map((os) => (
-                        <option key={os.id} value={os.id}>{os.nombre}</option>
-                      ))}
-                    </select>
-                  </div>
-                  {editForm.obraSocialId && (
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[11px] font-bold text-deep/35 uppercase tracking-widest mb-1.5">N° de afiliado</label>
-                        <input value={editForm.numeroAfiliado} onChange={set('numeroAfiliado')} className={inputCls('numeroAfiliado')} placeholder="00000000" maxLength={30} />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-bold text-deep/35 uppercase tracking-widest mb-1.5">Plan</label>
-                        <input value={editForm.planAfiliado} onChange={set('planAfiliado')} className={inputCls('planAfiliado')} placeholder="Plan 310" maxLength={50} />
-                      </div>
-                    </div>
-                  )}
+                  {editErrors.fechaNacimiento && <p className="text-red-500 text-xs mt-1">{editErrors.fechaNacimiento}</p>}
                 </div>
                 {saveError && <p className="text-red-500 text-xs bg-red-50 border border-red-100 rounded-xl px-4 py-2.5">{saveError}</p>}
                 <div className="flex gap-3 pt-1">

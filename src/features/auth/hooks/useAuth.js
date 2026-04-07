@@ -13,10 +13,10 @@ export function useAuth() {
     setError(null)
     try {
       const { data } = await authService.login({ email, password })
-      storeLogin(data.token)
+      storeLogin(data.token, data.refreshToken)
       return data
     } catch (err) {
-      const msg = err.response?.data?.message || 'Credenciales incorrectas'
+      const msg = err.response?.data?.mensaje || err.response?.data?.message || 'Credenciales incorrectas'
       setError(msg)
       throw new Error(msg)
     } finally {
@@ -31,7 +31,7 @@ export function useAuth() {
       const { data } = await authService.registerPaciente(formData)
       return data
     } catch (err) {
-      const msg = err.response?.data?.message || 'Error al registrar'
+      const msg = err.response?.data?.mensaje || err.response?.data?.message || 'Error al registrar'
       setError(msg)
       throw new Error(msg)
     } finally {

@@ -21,4 +21,6 @@ export const pacientesService = {
   // Paciente — dependientes (menores sin cuenta)
   getMisDependientes: () => api.get('/Pacientes/mis-dependientes'),
   crearDependiente: (data) => api.post('/Pacientes/dependientes', data),
+  actualizarDependiente: (id, data) => api.put(`/Pacientes/dependientes/${id}`, data),
+  eliminarDependiente: (id) => api.delete(`/Pacientes/dependientes/${id}`),
 }

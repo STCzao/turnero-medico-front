@@ -11,7 +11,7 @@ export default function ModalConfirmar({ turno, isOpen, onClose, onSuccess }) {
 
   const { confirmar, loading, error: submitError } = useTurnoActions(onSuccess)
   const { medicos, loading: loadingMedicos } = useMedicosByEspecialidad(turno?.especialidadId)
-  const { slots, loading: loadingSlots } = useDisponibilidad(
+  const { slots, loading: loadingSlots, error: slotsError } = useDisponibilidad(
     doctorId || null,
     fecha || null
   )
@@ -127,6 +127,10 @@ export default function ModalConfirmar({ turno, isOpen, onClose, onSuccess }) {
                   <div key={i} className="h-9 bg-deep/5 rounded-lg animate-pulse" />
                 ))}
               </div>
+            ) : slotsError ? (
+              <p className="text-xs text-red-500 bg-red-50 border border-red-100 rounded-xl px-3 py-2">
+                {slotsError}
+              </p>
             ) : slots.length === 0 ? (
               <p className="text-xs text-deep/40 italic">
                 Sin disponibilidad para esa fecha

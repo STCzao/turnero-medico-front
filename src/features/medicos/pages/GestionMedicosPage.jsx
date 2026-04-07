@@ -8,9 +8,27 @@ import { useMedicos } from '../hooks/useMedicos'
 import { medicosService } from '../services/medicosService'
 import { authService } from '../../auth/services/authService'
 import { useEspecialidades } from '../../especialidades/hooks/useEspecialidades'
+import { validate, rules, NOMBRE_RULES, PASSWORD_RULES, EMAIL_RULES } from '../../../utils/validators'
+import Pagination from '../../../components/ui/Pagination'
 
 const PAGE_SIZE = 15
-const FORM_INICIAL = { nombre: '', apellido: '', email: '', password: '', matricula: '', telefono: '', especialidadId: '' }
+const FORM_INICIAL = { nombre: '', apellido: '', dni: '', email: '', password: '', matricula: '', telefono: '', especialidadId: '' }
+const MEDICO_CREAR_SCHEMA = {
+  nombre:         NOMBRE_RULES,
+  apellido:       NOMBRE_RULES,
+  dni:            [rules.required('El DNI es obligatorio'), rules.dni()],
+  email:          EMAIL_RULES,
+  matricula:      [rules.required('La matrícula es obligatoria'), rules.minLength(5, 'Mínimo 5 caracteres'), rules.maxLength(15, 'Máximo 15 caracteres'), rules.pattern(/^[A-Za-z0-9]+$/, 'Solo letras y números, sin espacios ni guiones')],
+  telefono:       [rules.required(), rules.telefono()],
+  especialidadId: [rules.required('Seleccioná una especialidad')],
+  password:       PASSWORD_RULES,
+}
+const MEDICO_EDITAR_SCHEMA = {
+  nombre:         NOMBRE_RULES,
+  apellido:       NOMBRE_RULES,
+  telefono:       [rules.required(), rules.telefono()],
+  especialidadId: [rules.required('Seleccioná una especialidad')],
+}
 
 export default function GestionMedicosPage() {
   const [page, setPage] = useState(1)
@@ -25,6 +43,7 @@ export default function GestionMedicosPage() {
   const [formError, setFormError] = useState(null)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState(null)
 
   const openCrear = () => {
     setForm(FORM_INICIAL)
@@ -36,6 +55,7 @@ export default function GestionMedicosPage() {
     setForm({
       nombre: medico.nombre ?? '',
       apellido: medico.apellido ?? '',
+      dni: medico.dni ?? '',
       email: medico.email ?? '',
       password: '',
       matricula: medico.matricula ?? '',
@@ -49,34 +69,10 @@ export default function GestionMedicosPage() {
   const closeModal = () => setModal(null)
 
   const handleSubmit = async () => {
-    if (!form.nombre.trim() || !form.apellido.trim() || !form.email.trim() || !form.matricula.trim() || !form.telefono.trim()) {
-      setFormError('Todos los campos marcados como obligatorios son requeridos')
-      return
-    }
-    if (modal.mode === 'crear') {
-      if (!form.password) {
-        setFormError('La contraseña es obligatoria')
-        return
-      }
-      if (form.password.length < 8) {
-        setFormError('La contraseña debe tener al menos 8 caracteres')
-        return
-      }
-      if (!/[A-Z]/.test(form.password)) {
-        setFormError('La contraseña debe incluir al menos una letra mayúscula')
-        return
-      }
-      if (!/[a-z]/.test(form.password)) {
-        setFormError('La contraseña debe incluir al menos una letra minúscula')
-        return
-      }
-      if (!/\d/.test(form.password)) {
-        setFormError('La contraseña debe incluir al menos un número')
-        return
-      }
-    }
-    if (!form.especialidadId) {
-      setFormError('Seleccioná una especialidad')
+    const schema = modal.mode === 'crear' ? MEDICO_CREAR_SCHEMA : MEDICO_EDITAR_SCHEMA
+    const errors = validate(schema, form)
+    if (Object.keys(errors).length) {
+      setFormError(Object.values(errors)[0])
       return
     }
     setSaving(true)
@@ -85,6 +81,7 @@ export default function GestionMedicosPage() {
         await authService.registerDoctor({
           nombre: form.nombre.trim(),
           apellido: form.apellido.trim(),
+          dni: form.dni.trim(),
           email: form.email.trim(),
           password: form.password,
           matricula: form.matricula.trim(),
@@ -96,8 +93,6 @@ export default function GestionMedicosPage() {
           id: modal.item.id,
           nombre: form.nombre.trim(),
           apellido: form.apellido.trim(),
-          email: form.email.trim(),
-          matricula: form.matricula.trim(),
           telefono: form.telefono.trim(),
           especialidadId: Number(form.especialidadId),
         })
@@ -105,7 +100,7 @@ export default function GestionMedicosPage() {
       await refetch()
       closeModal()
     } catch (err) {
-      setFormError(err.response?.data?.message || err.response?.data?.mensaje || 'Error al guardar')
+      setFormError(err.response?.data?.mensaje || err.response?.data?.message || 'Error al guardar')
     } finally {
       setSaving(false)
     }
@@ -113,12 +108,13 @@ export default function GestionMedicosPage() {
 
   const handleDelete = async () => {
     setDeleting(true)
+    setDeleteError(null)
     try {
       await medicosService.eliminar(confirmDelete.id)
       await refetch()
       setConfirmDelete(null)
-    } catch {
-      // silencioso
+    } catch (err) {
+      setDeleteError(err.response?.data?.mensaje || 'No se pudo eliminar al médico')
     } finally {
       setDeleting(false)
     }
@@ -184,23 +180,26 @@ export default function GestionMedicosPage() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className={`px-5 py-4 flex flex-col md:grid md:grid-cols-[1.5fr_1fr_1.5fr_auto] md:items-center gap-1 md:gap-4 ${
+                  className={`px-5 py-3.5 flex items-center gap-3 md:grid md:grid-cols-[1.5fr_1fr_1.5fr_auto] md:gap-4 ${
                     idx < items.length - 1 ? 'border-b border-deep/5' : ''
                   }`}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
                     <div className="w-8 h-8 rounded-full bg-teal/10 flex items-center justify-center shrink-0">
                       <span className="text-teal text-xs font-bold">
                         {medico.nombre?.[0]}{medico.apellido?.[0]}
                       </span>
                     </div>
-                    <p className="text-sm font-semibold text-deep">
-                      Dr. {medico.nombre} {medico.apellido}
-                    </p>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-deep truncate">
+                        Dr. {medico.nombre} {medico.apellido}
+                      </p>
+                      <p className="text-xs text-deep/40 truncate md:hidden">{medico.especialidadNombre ?? '—'}</p>
+                    </div>
                   </div>
-                  <p className="text-sm text-deep/60">{medico.especialidadNombre ?? '—'}</p>
-                  <p className="text-sm text-deep/50 truncate">{medico.email ?? '—'}</p>
-                  <div className="flex gap-2 shrink-0 self-start md:self-auto">
+                  <p className="hidden md:block text-sm text-deep/60">{medico.especialidadNombre ?? '—'}</p>
+                  <p className="hidden md:block text-sm text-deep/50 truncate">{medico.email ?? '—'}</p>
+                  <div className="flex gap-2 shrink-0">
                     <button
                       onClick={() => openEditar(medico)}
                       className="text-xs font-medium text-deep/50 hover:text-deep transition-colors px-2 py-1 rounded-lg hover:bg-deep/5"
@@ -220,41 +219,7 @@ export default function GestionMedicosPage() {
           </div>
 
           {/* Paginación */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-6">
-              <button
-                onClick={() => setPage(p => p - 1)}
-                disabled={page === 1}
-                className="w-9 h-9 rounded-xl border border-deep/10 flex items-center justify-center text-deep/50 hover:text-deep hover:border-deep/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
-                <button
-                  key={n}
-                  onClick={() => setPage(n)}
-                  className={`w-9 h-9 rounded-xl text-sm font-semibold transition-colors ${
-                    n === page
-                      ? 'bg-deep text-mint'
-                      : 'border border-deep/10 text-deep/50 hover:text-deep hover:border-deep/30'
-                  }`}
-                >
-                  {n}
-                </button>
-              ))}
-              <button
-                onClick={() => setPage(p => p + 1)}
-                disabled={page === totalPages}
-                className="w-9 h-9 rounded-xl border border-deep/10 flex items-center justify-center text-deep/50 hover:text-deep hover:border-deep/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
-          )}
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
         </>
       )}
 
@@ -299,6 +264,7 @@ export default function GestionMedicosPage() {
             onChange={e => { setForm(f => ({ ...f, email: e.target.value })); setFormError(null) }}
             placeholder="Ej: doctor@clinica.com"
             required
+            disabled={modal?.mode === 'editar'}
           />
 
           {modal?.mode === 'crear' && (
@@ -314,22 +280,32 @@ export default function GestionMedicosPage() {
 
           <div className="grid grid-cols-2 gap-3">
             <Input
+              label="DNI"
+              id="dni"
+              value={form.dni}
+              onChange={e => { setForm(f => ({ ...f, dni: e.target.value })); setFormError(null) }}
+              placeholder="Ej: 32456789"
+              required={modal?.mode === 'crear'}
+              disabled={modal?.mode === 'editar'}
+            />
+            <Input
               label="Matrícula"
               id="matricula"
               value={form.matricula}
               onChange={e => { setForm(f => ({ ...f, matricula: e.target.value })); setFormError(null) }}
               placeholder="Ej: MP12345"
               required
-            />
-            <Input
-              label="Teléfono"
-              id="telefono"
-              value={form.telefono}
-              onChange={e => { setForm(f => ({ ...f, telefono: e.target.value })); setFormError(null) }}
-              placeholder="Ej: 1122334455"
-              required
+              disabled={modal?.mode === 'editar'}
             />
           </div>
+          <Input
+            label="Teléfono"
+            id="telefono"
+            value={form.telefono}
+            onChange={e => { setForm(f => ({ ...f, telefono: e.target.value })); setFormError(null) }}
+            placeholder="Ej: 1122334455"
+            required
+          />
 
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-navy">Especialidad</label>
@@ -352,10 +328,10 @@ export default function GestionMedicosPage() {
       {/* Confirm eliminar */}
       <ConfirmModal
         isOpen={!!confirmDelete}
-        onClose={() => setConfirmDelete(null)}
+        onClose={() => { setConfirmDelete(null); setDeleteError(null) }}
         onConfirm={handleDelete}
         title="Eliminar médico"
-        message={`¿Eliminar al Dr. ${confirmDelete?.nombre} ${confirmDelete?.apellido}? Esta acción no se puede deshacer.`}
+        message={deleteError ?? `¿Eliminar al Dr. ${confirmDelete?.nombre} ${confirmDelete?.apellido}? Esta acción no se puede deshacer.`}
         confirmLabel="Eliminar"
         variant="danger"
         loading={deleting}

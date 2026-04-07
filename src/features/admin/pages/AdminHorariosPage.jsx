@@ -32,6 +32,7 @@ export default function AdminHorariosPage() {
   const [formError, setFormError] = useState(null)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState(null)
 
   const fetchHorarios = useCallback(async () => {
     if (!doctorId) return
@@ -57,14 +58,19 @@ export default function AdminHorariosPage() {
 
   const handleSubmit = async () => {
     if (!doctorId) return
+    const intervalo = Number(form.intervaloMinutos)
+    if (!form.horaInicio) { setFormError('Ingresá la hora de inicio'); return }
+    if (!form.horaFin)    { setFormError('Ingresá la hora de fin'); return }
+    if (form.horaFin <= form.horaInicio) { setFormError('La hora de fin debe ser posterior a la hora de inicio'); return }
+    if (isNaN(intervalo) || intervalo < 10 || intervalo > 120) { setFormError('El intervalo debe ser entre 10 y 120 minutos'); return }
     setSaving(true)
     try {
       await horariosService.crear({
-        doctorId:         Number(doctorId),
-        diaSemana:        Number(form.diaSemana),
-        horaInicio:       form.horaInicio,
-        horaFin:          form.horaFin,
-        duracionMinutos:   Number(form.intervaloMinutos),
+        doctorId:        Number(doctorId),
+        diaSemana:       Number(form.diaSemana),
+        horaInicio:      form.horaInicio + ':00',
+        horaFin:         form.horaFin + ':00',
+        duracionMinutos: Number(form.intervaloMinutos),
       })
       await fetchHorarios()
       setModalAgregar(false)
@@ -77,12 +83,13 @@ export default function AdminHorariosPage() {
 
   const handleDelete = async () => {
     setDeleting(true)
+    setDeleteError(null)
     try {
       await horariosService.eliminar(confirmDelete.id)
       await fetchHorarios()
       setConfirmDelete(null)
-    } catch {
-      // silencioso
+    } catch (err) {
+      setDeleteError(err.response?.data?.mensaje || 'No se pudo eliminar el horario')
     } finally {
       setDeleting(false)
     }
@@ -265,10 +272,10 @@ export default function AdminHorariosPage() {
       {/* Confirm eliminar */}
       <ConfirmModal
         isOpen={!!confirmDelete}
-        onClose={() => setConfirmDelete(null)}
+        onClose={() => { setConfirmDelete(null); setDeleteError(null) }}
         onConfirm={handleDelete}
         title="Eliminar horario"
-        message={`¿Eliminar el horario del ${confirmDelete ? labelDia(confirmDelete.diaSemana) : ''} de ${confirmDelete?.horaInicio} a ${confirmDelete?.horaFin}?`}
+        message={deleteError ?? `¿Eliminar el horario del ${confirmDelete ? labelDia(confirmDelete.diaSemana) : ''} de ${confirmDelete?.horaInicio} a ${confirmDelete?.horaFin}?`}
         confirmLabel="Eliminar"
         variant="danger"
         loading={deleting}

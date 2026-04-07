@@ -6,7 +6,7 @@ export const horariosService = {
 
   // Admin / Secretaria / Paciente — slots libres para agendar
   getDisponibilidad: (doctorId, fecha) =>
-    api.get(`/Horarios/doctor/${doctorId}/disponibilidad`, { params: { fecha } }),
+    api.get(`/Horarios/doctor/${doctorId}/disponibilidad`, { params: { fecha: fecha + 'T00:00:00' } }),
 
   // Admin
   crear: (data) => api.post('/Horarios', data),

@@ -11,6 +11,8 @@ const decodeJwt = (token) => {
 }
 
 const TOKEN_KEY = 'token'
+const REFRESH_TOKEN_KEY = 'refreshToken'
+const USER_ID_KEY = 'userId'
 
 const storedToken = localStorage.getItem(TOKEN_KEY)
 const storedPayload = storedToken ? decodeJwt(storedToken) : null
@@ -23,6 +25,7 @@ const getRol = (payload) =>
 
 const useAuthStore = create((set) => ({
   token: storedToken,
+  refreshToken: localStorage.getItem(REFRESH_TOKEN_KEY),
   user: storedPayload
     ? {
         id: storedPayload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] || storedPayload.sub,
@@ -33,14 +36,18 @@ const useAuthStore = create((set) => ({
     : null,
   isAuthenticated: !!storedToken,
 
-  login: (token) => {
+  login: (token, refreshToken) => {
     localStorage.setItem(TOKEN_KEY, token)
+    if (refreshToken) localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken)
     const payload = decodeJwt(token)
+    const userId = payload?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] || payload?.sub
+    if (userId) localStorage.setItem(USER_ID_KEY, userId)
     set({
       token,
+      refreshToken: refreshToken ?? null,
       isAuthenticated: true,
       user: {
-        id: payload?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] || payload?.sub,
+        id: userId,
         email: payload?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] || payload?.email,
         nombre: payload?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || payload?.name,
         rol: getRol(payload),
@@ -48,9 +55,18 @@ const useAuthStore = create((set) => ({
     })
   },
 
+  // Actualiza solo los tokens tras una renovación exitosa (sin tocar user)
+  setTokens: (token, refreshToken) => {
+    localStorage.setItem(TOKEN_KEY, token)
+    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken)
+    set({ token, refreshToken })
+  },
+
   logout: () => {
     localStorage.removeItem(TOKEN_KEY)
-    set({ token: null, user: null, isAuthenticated: false })
+    localStorage.removeItem(REFRESH_TOKEN_KEY)
+    localStorage.removeItem(USER_ID_KEY)
+    set({ token: null, refreshToken: null, user: null, isAuthenticated: false })
   },
 }))
 

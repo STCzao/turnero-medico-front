@@ -6,6 +6,8 @@ export const secretariasService = {
 
   getById: (id) => api.get(`/Secretarias/${id}`),
 
+  getMyProfile: () => api.get('/Secretarias/me'),
+
   actualizar: (id, data) => api.put(`/Secretarias/${id}`, data),
 
   eliminar: (id) => api.delete(`/Secretarias/${id}`),
