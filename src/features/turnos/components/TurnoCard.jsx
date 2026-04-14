@@ -6,7 +6,7 @@ import { formatFechaHora } from "../../../utils/formatFecha";
 
 const CANCELABLES = [ESTADO_TURNO.SOLICITUD_PENDIENTE, ESTADO_TURNO.CONFIRMADO];
 
-export default function TurnoCard({ turno, onCancel, cancelLoading }) {
+export default function TurnoCard({ turno, onCancel, cancelLoading, pacienteNombre }) {
   const [confirmando, setConfirmando] = useState(false);
   const canCancel = CANCELABLES.includes(turno.estado);
 
@@ -21,6 +21,11 @@ export default function TurnoCard({ turno, onCancel, cancelLoading }) {
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="mr-3">
+          {pacienteNombre && (
+            <p className="text-[10px] font-bold text-teal uppercase tracking-widest mb-0.5">
+              {pacienteNombre}
+            </p>
+          )}
           <p className="text-[11px] text-deep/40 uppercase tracking-widest font-semibold mb-0.5">
             {turno.especialidadNombre ?? "Especialidad"}
           </p>

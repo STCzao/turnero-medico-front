@@ -3,7 +3,7 @@ import RegisterForm from '../components/RegisterForm'
 
 export default function RegisterPage() {
   return (
-    <div className="min-h-screen bg-navy flex items-center justify-center px-6 py-8">
+    <div className="min-h-screen bg-navy flex items-center justify-center px-6 py-4 md:py-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

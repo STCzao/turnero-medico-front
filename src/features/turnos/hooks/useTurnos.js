@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { turnosService } from '../services/turnosService'
 
 // Hook para el paciente / doctor — ver sus propios turnos
@@ -151,4 +151,59 @@ export function useAgendaDoctor(fecha) {
   useEffect(() => { fetch() }, [fetch])
 
   return { turnos, loading, error, refetch: fetch }
+}
+
+// Hook para Paciente — ver turnos de todos sus dependientes en paralelo
+export function useTurnosFamiliares(dependientes) {
+  const [turnos, setTurnos] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const refetchKeyRef = useRef(0)
+  const [refetchKey, setRefetchKey] = useState(0)
+
+  useEffect(() => {
+    if (!dependientes.length) {
+      setTurnos([])
+      return
+    }
+    let cancelled = false
+    setLoading(true)
+    setError(null)
+    Promise.all(
+      dependientes.map(dep =>
+        turnosService.getByPaciente(dep.id).then(({ data }) => {
+          const items = Array.isArray(data) ? data : (data?.items ?? data?.data ?? [])
+          return items.map(t => ({
+            ...t,
+            pacienteNombre: `${dep.nombre} ${dep.apellido}`,
+            pacienteId: dep.id,
+          }))
+        })
+      )
+    )
+      .then(results => {
+        if (cancelled) return
+        setTurnos(
+          results.flat().sort((a, b) => {
+            if (!a.fechaHora) return 1
+            if (!b.fechaHora) return -1
+            return new Date(b.fechaHora) - new Date(a.fechaHora)
+          })
+        )
+        setLoading(false)
+      })
+      .catch(err => {
+        if (cancelled) return
+        setError(err.response?.data?.mensaje || 'Error al cargar turnos de familiares')
+        setLoading(false)
+      })
+    return () => { cancelled = true }
+  }, [dependientes, refetchKey])
+
+  const refetch = useCallback(() => {
+    refetchKeyRef.current += 1
+    setRefetchKey(refetchKeyRef.current)
+  }, [])
+
+  return { turnos, loading, error, refetch }
 }

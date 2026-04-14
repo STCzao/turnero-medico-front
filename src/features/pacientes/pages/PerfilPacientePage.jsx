@@ -116,13 +116,13 @@ export default function PerfilPacientePage() {
               </button>
             )}
           </div>
-            {/* DNI siempre read-only */}
+            {/* Campos siempre read-only: DNI y Email */}
             <InfoRow label="DNI" value={perfil.dni} />
+            <InfoRow label="Email" value={perfil.email} />
 
             {!editing ? (
               <>
                 <InfoRow label="Nombre" value={`${perfil.nombre} ${perfil.apellido}`} />
-                <InfoRow label="Email" value={perfil.email} />
                 <InfoRow label="Teléfono" value={perfil.telefono} />
                 <InfoRow
                   label="Fecha de nacimiento"
@@ -142,10 +142,6 @@ export default function PerfilPacientePage() {
                     <input value={editForm.apellido} onChange={set('apellido')} className={inputCls('apellido')} placeholder="Apellido" />
                     {editErrors.apellido && <p className="text-red-500 text-xs mt-1">{editErrors.apellido}</p>}
                   </div>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-deep/35 uppercase tracking-widest mb-1.5">Email</label>
-                  <input type="email" value={editForm.email} disabled className={inputCls('email')} />
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold text-deep/35 uppercase tracking-widest mb-1.5">Teléfono <span className="text-red-400">*</span></label>
