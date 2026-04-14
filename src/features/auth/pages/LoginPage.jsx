@@ -32,7 +32,7 @@ export default function LoginPage() {
       </motion.aside>
 
       {/* Panel derecho — formulario */}
-      <div className="flex-1 flex flex-col justify-center items-center px-8 py-12 md:px-16">
+      <div className="flex-1 flex flex-col justify-center items-center px-8 py-6 md:py-12 md:px-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -41,7 +41,7 @@ export default function LoginPage() {
         >
           {/* Logo centrado sobre el formulario */}
           <div className="flex justify-center">
-            <img src={logo} alt="Clínica Meridian" className="h-44 w-auto" />
+            <img src={logo} alt="Clínica Meridian" className="h-24 md:h-44 w-auto" />
           </div>
 
           <h2 className="text-white font-black text-center text-4xl tracking-tight mb-1">

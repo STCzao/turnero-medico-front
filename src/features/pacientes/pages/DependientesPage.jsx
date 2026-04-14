@@ -3,6 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import PageWrapper from '../../../components/layout/PageWrapper'
 import { useDependientes } from '../hooks/usePacientes'
 import { validate, rules } from '../../../utils/validators'
+import TurnoCard from '../../turnos/components/TurnoCard'
+import { useTurnosFamiliares, useTurnoActions } from '../../turnos/hooks/useTurnos'
+import { ESTADO_TURNO } from '../../../constants/estadosTurno'
 
 const EMPTY_FORM = {
   nombre: '', apellido: '', dni: '', fechaNacimiento: '', telefono: '',
@@ -20,6 +23,15 @@ const SCHEMA_EDIT = {
   apellido:        [rules.required('Ingresá el apellido')],
   fechaNacimiento: [rules.required('Ingresá la fecha de nacimiento')],
 }
+
+const FILTROS_ESTADO = [
+  { label: 'Todos',       value: undefined },
+  { label: 'Pendientes',  value: ESTADO_TURNO.SOLICITUD_PENDIENTE },
+  { label: 'Confirmados', value: ESTADO_TURNO.CONFIRMADO },
+  { label: 'Completados', value: ESTADO_TURNO.COMPLETADO },
+  { label: 'Cancelados',  value: ESTADO_TURNO.CANCELADO },
+  { label: 'Rechazados',  value: ESTADO_TURNO.RECHAZADO },
+]
 
 function FormField({ label, error, children, required = true }) {
   return (
@@ -132,6 +144,17 @@ function DependienteCard({ dep, onEdit, onDelete }) {
 
 export default function DependientesPage() {
   const { dependientes, loading, error, crearDependiente, actualizarDependiente, eliminarDependiente } = useDependientes()
+
+  const [filtroFamiliar, setFiltroFamiliar] = useState(null)
+  const [filtroEstado, setFiltroEstado] = useState(undefined)
+  const { turnos: turnosFamiliares, loading: loadingTurnos, error: errorTurnos, refetch: refetchTurnos } = useTurnosFamiliares(dependientes)
+  const { cancelar, loading: cancelLoading } = useTurnoActions(refetchTurnos)
+
+  const turnosFiltrados = turnosFamiliares.filter(t => {
+    if (filtroFamiliar !== null && t.pacienteId !== filtroFamiliar) return false
+    if (filtroEstado !== undefined && t.estado !== filtroEstado) return false
+    return true
+  })
 
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState(EMPTY_FORM)
@@ -405,6 +428,99 @@ export default function DependientesPage() {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Sección turnos de familiares */}
+      {!loading && dependientes.length > 0 && (
+        <div className="w-full max-w-lg mx-auto mt-10">
+          <div className="mb-5">
+            <h2 className="text-deep font-black text-xl tracking-tight">Turnos de familiares</h2>
+            <p className="text-deep/50 text-sm mt-1">Revisá el estado de los turnos de tus familiares</p>
+          </div>
+
+          {/* Filtro por familiar */}
+          <div className="flex gap-2 flex-wrap mb-3">
+            <button
+              onClick={() => setFiltroFamiliar(null)}
+              className={`text-xs font-semibold px-4 py-2 rounded-full transition-all ${
+                filtroFamiliar === null
+                  ? 'bg-deep text-mint shadow-sm'
+                  : 'bg-white text-deep/55 hover:text-deep border border-deep/10'
+              }`}
+            >
+              Todos
+            </button>
+            {dependientes.map(dep => (
+              <button
+                key={dep.id}
+                onClick={() => setFiltroFamiliar(dep.id)}
+                className={`text-xs font-semibold px-4 py-2 rounded-full transition-all ${
+                  filtroFamiliar === dep.id
+                    ? 'bg-teal text-white shadow-sm'
+                    : 'bg-white text-deep/55 hover:text-deep border border-deep/10'
+                }`}
+              >
+                {dep.nombre} {dep.apellido}
+              </button>
+            ))}
+          </div>
+
+          {/* Filtro por estado */}
+          <div className="flex gap-2 flex-wrap mb-6">
+            {FILTROS_ESTADO.map(({ label, value }) => (
+              <button
+                key={label}
+                onClick={() => setFiltroEstado(value)}
+                className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-all ${
+                  filtroEstado === value
+                    ? 'bg-deep/15 text-deep'
+                    : 'text-deep/40 hover:text-deep'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {loadingTurnos && (
+            <div className="space-y-3">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <div key={i} className="bg-white rounded-2xl p-5 animate-pulse h-36 border border-deep/5" />
+              ))}
+            </div>
+          )}
+
+          {errorTurnos && !loadingTurnos && (
+            <div className="text-center py-10">
+              <p className="text-red-500 text-sm">{errorTurnos}</p>
+              <button onClick={refetchTurnos} className="mt-2 text-xs text-deep/50 hover:text-deep underline">
+                Reintentar
+              </button>
+            </div>
+          )}
+
+          {!loadingTurnos && !errorTurnos && turnosFiltrados.length === 0 && (
+            <p className="text-center text-deep/35 text-sm py-10">
+              No hay turnos{filtroFamiliar !== null || filtroEstado !== undefined ? ' con los filtros seleccionados' : ' registrados para tus familiares'}
+            </p>
+          )}
+
+          {!loadingTurnos && !errorTurnos && turnosFiltrados.length > 0 && (
+            <div className="space-y-3">
+              <AnimatePresence>
+                {turnosFiltrados.map(turno => (
+                  <TurnoCard
+                    key={turno.id}
+                    turno={turno}
+                    pacienteNombre={turno.pacienteNombre}
+                    onCancel={(id) => cancelar(id, { motivo: 'Cancelado por el paciente' })}
+                    cancelLoading={cancelLoading}
+                  />
+                ))}
+              </AnimatePresence>
+            </div>
+          )}
+        </div>
+      )}
     </PageWrapper>
   )
 }
